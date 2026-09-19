@@ -162,9 +162,51 @@ function factCheck(ck,c){
     }
     return c.hire_dates_on.some(inRange);
   }
-  if(t==="insured_gte"){const n=num(c.insured);return n===null?null:n>=ck.n}
+  if(t==="insured_gte"){
+    if((ck.unless_traits||[]).some(x=>(c.traits||[]).includes(x)))return true;   /* 인원 요건의 예외(벤처·이노비즈·사회적기업 등)로 입력된 회사 */
+    if((ck.unless_industry_flags||[]).some(f=>flagsOf(c).includes(f)))return true;   /* 업종 표시로 예외인 회사(K 지식서비스산업 등) */
+    const n=num(c.insured);return n===null?null:n>=ck.n;
+  }
+  if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return sg?sg.includes(ck.value):null}   /* 회사 시군구에 그 이름이 들어 있는가(제목에 구 이름이 없는 구청 사업) */
   if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
-  return null;
+  if(t==="months_lt"){const ms=monthsSince(c.founded);return ms===null?null:ms<ck.n}   /* 업력(개업한 달부터 이번 달까지)이 n개월 미만 */
+  if(t==="ceo_age_lte"){   /* 대표자 나이가 n세 이하. 출생연도(연 나이라 경계 한 살은 모름으로 둔다) > 사무실 나이 표시 > 회사 특성 순 */
+    const by=num(c.ceo_birth_year);
+    if(by!==null){const age=new Date().getFullYear()-by;return age<=ck.n?true:(age===ck.n+1?null:false)}
+    if(c.ceo_age_band==="le34")return ck.n>=34?true:null;
+    if(c.ceo_age_band==="35to39")return ck.n>=39?true:(ck.n<35?false:null);
+    if((c.traits||[]).some(x=>String(x).includes("39세 이하")))return ck.n>=39?true:null;
+    return null;
+  }
+  if(t==="section_in"){const sec=sectionOf(c);return sec?ck.sections.includes(sec):null}   /* 업종 대분류(C 제조업 등) */
+  if(t==="youth_hire_1y"){   /* 최근 1년 안에 뽑아 지금도 일하는 청년 직원이 있는가. 청년 표시는 34세 이하로 센 것이라, 청년 표시가 없는 채용만 있으면 모름(35~39세일 수 있다) */
+    const td=todayISO(),since=(+td.slice(0,4)-1)+td.slice(4),youth=c.youth_hire_dates_on,allh=c.hire_dates_on;
+    if(youth===undefined||youth===null||allh===undefined||allh===null)return null;
+    if(youth.some(d=>String(d)>=since))return true;
+    return allh.some(d=>String(d)>=since)?null:false;
+  }
+  if(t==="sales_half_drop"){   /* 상반기 매출 x 2 가 전년 매출의 ratio 이하(어림값). 같은 기간끼리 견준 것이 아니라 확정하지 않는다 */
+    const s=num(c.sales_manwon),h=num(c[ck.half_field]);
+    if(s===null||h===null||s<=0)return null;
+    return h*2/s<=ck.ratio;
+  }
+  if(t==="trait")return (c.traits||[]).includes(ck.label)?true:null;
+  if(t==="any_of"||t==="all_of"){
+    const rs=(ck.checks||[]).map(x=>factCheck(x,c));
+    if(t==="any_of")return rs.some(r=>r===true)?true:(rs.length&&rs.every(r=>r===false)?false:null);
+    return rs.some(r=>r===false)?false:(rs.length&&rs.every(r=>r===true)?true:null);
+  }
+  return null;   /* need_data 를 비롯해 모르는 종류는 늘 «확인할 것» */
+}
+/* 요건 묶음을 돌려 맞음, 안 맞음, 확인할 것, 이렇게 하면 글 목록을 낸다 */
+function runChecks(checks,c){
+  const passed=[],failed=[],unknown=[],todo=[],softHits=[];
+  for(const ck of checks||[]){
+    const res=factCheck(ck,c);
+    if(res===false&&ck.soft){todo.push(ck.soft_text||ck.text);if(ck.soft_flag)softHits.push([ck.soft_flag,ck.soft_penalty||0])}   /* 안 맞아도 탈락이 아닌 요건: «하면 받을 수 있는 것» 으로 두고, 표시와 감점이 적혀 있으면 모은다 */
+    else (res===true?passed:res===false?failed:unknown).push(ck.text);
+  }
+  return {passed,failed,unknown,todo,softHits};
 }
 function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
@@ -214,6 +256,10 @@ function matchNotices(c,notices,needsDef,limit){
       if(named.some(sc=>sc.ksic.some(px=>ksics.some(k=>k.startsWith(px))))){score+=2;reasons.push("업종: "+named[0].name)}
       else{score-=4;flags.push(named[0].name+" 업종 대상일 수 있음")}
     }
+    /* 제목에 특정 기업 유형(사회적경제기업, 여성기업, 장애인기업)을 밝힌 공고: 그 특성이 없는 회사에는 감점하고 표시 */
+    for(const of of RULES.only_for||[]){
+      if(of.keywords.some(k=>title.includes(k))&&!of.traits.some(t=>(c.traits||[]).includes(t))){score-=RULES.only_for_penalty||0;flags.push(of.flag)}
+    }
     /* 수출·해외 공고: 수출 관심도 수출 특성도 없는 회사에는 감점 */
     if(!wantsExport&&(it.field==="수출"||expKw.some(k=>title.includes(k)))){score-=4;flags.push("수출 기업 대상일 수 있음")}
     /* 창업 공고: 창업기업은 사업 개시 후 7년이 지나지 않은 기업 (중소기업창업 지원법 제2조 제3호) */
@@ -234,16 +280,15 @@ function matchNotices(c,notices,needsDef,limit){
     const fact=facts.find(f=>(f.ids||[]).includes(it.id)||((f.title_all||[]).length&&f.title_all.every(w=>title.includes(w))))||null;
     let factOut=null;
     if(fact){
-      const passed=[],failed=[],unknown=[],todo=[];
-      for(const ck of fact.checks||[]){
-        const res=factCheck(ck,c);
-        if(res===false&&ck.soft)todo.push(ck.soft_text||ck.text);   /* 안 맞아도 탈락이 아닌 요건(예: 올해 새로 뽑은 직원): 감점 없이 «하면 받을 수 있는 것» 으로 둔다 */
-        else (res===true?passed:res===false?failed:unknown).push(ck.text);
-      }
+      const {passed,failed,unknown,todo,softHits}=runChecks(fact.checks,c);
+      for(const [flagText,pen] of softHits){score-=pen;flags.push(flagText)}   /* 예외에 들 때만 되는 요건(직원 10명 이상 등): 탈락이라 단정하지 않되 표시를 달고 뒤로 보낸다 */
+      /* 한 공고 안의 세부 사업(자금)마다 따로 가린다. 점수에는 넣지 않고 보여 주기만 한다 */
+      const sub=(fact.sub||[]).map(sp=>{const r=runChecks(sp.checks,c);
+        return {name:sp.name,benefit:sp.benefit||null,status:r.failed.length?"no":(r.unknown.length?"check":(r.todo.length?"todo":"yes")),passed:r.passed,failed:r.failed,unknown:r.unknown,todo:r.todo}});
       score+=3*passed.length-8*failed.length;
       if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
       if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
-      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo};
+      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo,sub};
     }
     /* 공고문에 적힌 제외 대상: 회사 업종이 그 업종이면 감점하고 표시 (예: 체인화 편의점은 프랜차이즈 가맹점 제외 공고에서 빠진다) */
     const ease=it.ease||{};
