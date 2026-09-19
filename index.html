@@ -94,6 +94,17 @@ details a{font-weight:500;color:var(--accent);text-decoration:none}
 .listhead{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
 .empty{color:var(--sub);padding:28px 0;text-align:center;margin:0}
 .steps{margin:10px 0 0;padding-left:20px;color:var(--sub);font-size:14px}
+.lead{font-size:16px;font-weight:500;margin:10px 0 0;max-width:62ch}
+.qa{margin:14px 0 0}
+.qa>div{display:grid;grid-template-columns:118px minmax(0,1fr);gap:4px 14px;padding:11px 0;border-top:1px solid var(--line)}
+.qa dt{font-weight:700;font-size:14px}
+.qa dd{margin:0;font-size:14px}
+@media (max-width:520px){.qa>div{grid-template-columns:minmax(0,1fr)}}
+details.sum{border:0;margin:4px 0 0;padding:0}
+.sum summary{font-size:13px;font-weight:500;color:var(--accent)}
+.sum p{margin:6px 0 0;font-size:13px;color:var(--sub)}
+#browse .chips+.chips{padding-top:2px}
+#bMore{margin-top:12px;width:100%}
 footer{padding-block:8px 32px;padding-inline:max(16px,calc((100% - 1320px)/2));font-size:12.5px;color:var(--sub)}
 footer p{margin:4px 0;max-width:90ch}
 </style>
@@ -118,16 +129,17 @@ footer p{margin:4px 0;max-width:90ch}
       <div class="fld"><label for="sido" class="req">사업장 주소</label>
         <div class="two"><select id="sido"></select><input type="text" id="sigungu" placeholder="시군구 (예: 수원시 영통구)" aria-label="시군구" maxlength="30"></div>
       </div>
-      <div class="fld"><label for="insured" class="req">4대보험(고용보험) 가입자 수</label><input type="number" id="insured" min="0" max="100000" placeholder="대표자 제외, 최근 1년 평균"></div>
+      <div class="fld"><label for="insured" class="req">4대보험(고용보험) 가입 직원 수</label><input type="number" id="insured" min="0" max="100000" placeholder="명">
+        <p class="hint">대표자는 제외합니다. 최근 1년 평균을 모르면 현재 직원 수를 적어 주세요.</p></div>
 
-      <div class="group"><span class="gt">업종</span>
-        <div class="fld"><label for="section">업종 대분류</label><select id="section"></select></div>
+      <div class="group"><span class="gt">업종과 매출</span>
         <div class="two">
-          <div class="fld"><label for="ksic_code">업종코드 (선택)</label><input type="text" id="ksic_code" placeholder="표준산업분류 5자리" inputmode="numeric" maxlength="6"></div>
           <div class="fld"><label for="industry_text">업태·종목</label><input type="text" id="industry_text" placeholder="예: 소프트웨어 개발" maxlength="60"></div>
+          <div class="fld"><label for="industry_code">국세청 업종코드 (선택)</label><input type="text" id="industry_code" placeholder="6자리 (예: 722000)" inputmode="numeric" maxlength="6"></div>
         </div>
+        <p class="hint">업종코드는 사업자등록증이나 세금 신고서에 적힌 6자리 숫자입니다. 모르면 비워 두세요.</p>
         <div class="two">
-          <div class="fld"><label for="sales_manwon">연 매출액 (만원, 선택)</label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
+          <div class="fld"><label for="sales_manwon">직전연도 연 매출액 (만원, 선택)</label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
           <div class="fld"><label for="founded">개업 연월 (선택)</label><input type="month" id="founded"></div>
         </div>
       </div>
@@ -150,7 +162,7 @@ footer p{margin:4px 0;max-width:90ch}
 
       <div class="group" id="excBox"><span class="gt">5인 미만 예외 (해당 시 선택)</span>
         <div class="checks one" id="exceptions"></div>
-        <p class="hint">지식서비스산업은 업종코드를 넣으면 자동으로 판정합니다.</p>
+        <p class="hint">국세청 업종코드를 넣으면 지식서비스산업 여부를 자동으로 추정합니다.</p>
       </div>
 
       <div class="group"><span class="gt">기타 확인</span>
@@ -209,22 +221,40 @@ footer p{margin:4px 0;max-width:90ch}
 
   <div class="results">
     <section class="panel" id="intro">
-      <h2>이렇게 확인합니다</h2>
+      <h2>우리 회사가 받을 수 있는지 확인하려면</h2>
       <ol class="steps">
         <li>왼쪽에 회사 기본자료와 담당자 정보를 입력합니다.</li>
         <li>개인정보 수집·이용에 동의하고 버튼을 누릅니다.</li>
-        <li>청년일자리도약장려금 요건별 판정과 회사 지역·업종에 맞는 기업마당 공고가 이 자리에 나옵니다.</li>
+        <li>청년일자리도약장려금 요건별 판정과 회사 지역·업종에 맞는 공고가 이 자리에 나옵니다.</li>
       </ol>
-      <p class="hint" id="dataMeta" style="margin-top:12px"></p>
+      <p class="hint" style="margin-top:10px">입력하지 않아도 아래에서 지원금 설명과 지금 신청할 수 있는 지원사업을 둘러볼 수 있습니다.</p>
     </section>
     <p class="msg" id="sendMsg" role="status" hidden></p>
     <div id="programs"></div>
-    <section class="panel" id="noticePanel" aria-label="기업마당 공고 매칭" hidden>
+    <section class="panel" id="noticePanel" aria-label="우리 회사에 맞는 공고" hidden>
       <div class="listhead">
-        <h2 id="nTitle">기업마당 공고 매칭</h2>
+        <h2 id="nTitle">우리 회사에 맞는 공고</h2>
         <div class="chips" id="filters"></div>
       </div>
       <div id="notices"></div>
+    </section>
+
+    <section class="panel" id="easy" aria-label="지원금 쉬운 설명"></section>
+
+    <section class="panel" id="browse" aria-label="지원사업 둘러보기">
+      <div class="listhead">
+        <h2>지원사업 둘러보기</h2>
+        <p class="hint" id="dataMeta"></p>
+        <div class="chips" id="bCats" role="group" aria-label="분류"></div>
+        <div class="chips" id="bInds" role="group" aria-label="업종"></div>
+        <div class="two">
+          <select id="bSido" aria-label="지역"></select>
+          <input type="text" id="bSearch" placeholder="공고 제목 검색" aria-label="공고 제목 검색" maxlength="40">
+        </div>
+        <p class="hint" id="bCount"></p>
+      </div>
+      <div id="bList"></div>
+      <button type="button" id="bMore" hidden>더 보기</button>
     </section>
   </div>
 </div>
@@ -243,7 +273,7 @@ footer p{margin:4px 0;max-width:90ch}
 "use strict";
 const CFG=window.SITE_CONFIG||{}, M=window.Matcher, RULES=M.RULES, DATA=M.DATA, won=M.won;
 const SIDO=["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원","충북","충남","전북","전남","경북","경남","제주"];
-const SECTIONS={A:"농업, 임업 및 어업",B:"광업",C:"제조업",D:"전기, 가스, 증기 및 공기 조절 공급업",E:"수도, 하수 및 폐기물 처리, 원료 재생업",F:"건설업",G:"도매 및 소매업",H:"운수 및 창고업",I:"숙박 및 음식점업",J:"정보통신업",K:"금융 및 보험업",L:"부동산업",M:"전문, 과학 및 기술 서비스업",N:"사업시설 관리, 사업 지원 및 임대 서비스업",P:"교육 서비스업",Q:"보건업 및 사회복지 서비스업",R:"예술, 스포츠 및 여가관련 서비스업",S:"협회 및 단체, 수리 및 기타 개인 서비스업"};
+const INDUSTRIES=[["제조업",["제조","공장","뿌리","소부장","부품"]],["음식·숙박",["음식","외식","식당","숙박","위생업소"]],["도소매·유통",["유통","소매","도매","상점","전통시장","입점"]],["IT·소프트웨어",["소프트웨어","SW","ICT","AI","인공지능","데이터","디지털","클라우드"]],["건설",["건설","건축","시공"]],["농식품",["농업","농식품","식품","농산물","수산","축산"]],["관광·콘텐츠",["관광","콘텐츠","게임","영상","공연"]],["바이오·의료",["바이오","의료","헬스케어","제약"]]];
 const ST={pass:"충족",fail:"미충족",check:"확인 필요",info:"참고"};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -252,7 +282,7 @@ let unlocked=!CFG.REQUIRE_CONSENT_TO_VIEW,lastResult=null,needFilter=null,timer=
 
 function readCompany(){
   return {name:val("name"),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
-    ksic_section:val("section"),ksic_code:val("ksic_code"),industry_text:val("industry_text"),sales_manwon:val("sales_manwon"),founded:val("founded"),
+    industry_code:val("industry_code"),industry_text:val("industry_text"),sales_manwon:val("sales_manwon"),founded:val("founded"),
     hire_plan:val("hire_plan"),hire_count:val("hire_count"),hire_youth:$("#hire_youth").checked,hire_regular:$("#hire_regular").checked,hire_hard:val("hire_hard"),
     flags:{mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked,
       exceptions:[...document.querySelectorAll("#exceptions input:checked")].map(i=>i.value)},
@@ -302,8 +332,49 @@ function render(){
   $("#notices").innerHTML=list.map(n=>`<div class="notice">
       <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a>
       <div class="s">${n.flags.map(x=>`<span class="tag ${x==="마감 임박"?"hot":""}">${esc(x)}</span>`).join("")}<span class="tag">${esc(n.field)}</span>${esc(n.org||"")} · ${esc(n.period||"")}${n.days_left!==null&&n.days_left>=0?` (D-${n.days_left})`:""}</div>
-      <div class="s">${esc(n.reasons.join(" / "))}</div>
+      <div class="s">${esc(n.reasons.join(" / "))}</div>${sumHTML(n.summary)}
     </div>`).join("")||'<p class="empty">조건에 맞는 진행 중 공고가 없습니다.</p>';
+}
+/* 기업마당 사업개요를 읽기 쉽게 줄바꿈해서 보여준다 */
+function sumHTML(s){
+  if(!s)return "";
+  const lines=s.replace(/☞/g,"\n☞ ").replace(/※/g,"\n※ ").split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  return `<details class="sum"><summary>요약 보기</summary><p>${lines.map(esc).join("<br>")}${s.length>=500?" …":""}</p></details>`;
+}
+
+/* ---------- 지원금 쉬운 설명 ---------- */
+function renderEasy(){
+  const p=RULES.programs[0];
+  if(!p||!p.easy){$("#easy").hidden=true;return}
+  $("#easy").innerHTML=`<h2>${esc(p.name)}, 쉽게 말하면</h2><p class="lead">${esc(p.easy.one_line)}</p>
+    <dl class="qa">${p.easy.items.map(x=>`<div><dt>${esc(x.q)}</dt><dd>${esc(x.a)}</dd></div>`).join("")}</dl>
+    <p class="hint">${esc(p.caution)}</p>`;
+}
+
+/* ---------- 지원사업 둘러보기: 입력 없이도 분류를 눌러 볼 수 있다 ---------- */
+let bCat="deadline",bInd=null,bShown=30,bSidoTouched=false;
+function browseItems(){
+  const today=M.todayISO(),sido=val("bSido"),q=val("bSearch");
+  let list=DATA.items.filter(it=>!it.end||it.end>=today);
+  if(bCat==="deadline")list=list.filter(it=>it.end&&M.daysLeft(it.end)<=7);
+  else if(bCat!=="all"){const nd=RULES.needs.find(n=>n.key===bCat);list=list.filter(it=>nd.fields.includes(it.field)||nd.keywords.some(k=>it.title.includes(k)))}
+  if(bInd){const kw=INDUSTRIES.find(x=>x[0]===bInd)[1];list=list.filter(it=>{const t=it.title+" "+(it.summary||"");return kw.some(k=>t.includes(k))})}
+  if(sido)list=list.filter(it=>!it.sido||!it.sido.length||it.sido.includes(sido));
+  if(q)list=list.filter(it=>it.title.includes(q));
+  return list.sort((a,b)=>(a.end||"9999").localeCompare(b.end||"9999")||(b.posted||"").localeCompare(a.posted||""));
+}
+function renderBrowse(){
+  const cats=[["deadline","마감 7일 이내"],["all","전체"]].concat(RULES.needs.map(n=>[n.key,n.label]));
+  $("#bCats").innerHTML=cats.map(c=>`<button type="button" class="chip" aria-pressed="${bCat===c[0]}" data-cat="${esc(c[0])}">${esc(c[1])}</button>`).join("");
+  $("#bInds").innerHTML=`<button type="button" class="chip" aria-pressed="${!bInd}" data-ind="">업종 전체</button>`+INDUSTRIES.map(x=>`<button type="button" class="chip" aria-pressed="${bInd===x[0]}" data-ind="${esc(x[0])}">${esc(x[0])}</button>`).join("");
+  const list=browseItems();
+  $("#bCount").textContent=`${won(list.length)}건`+(val("bSido")?` (전국 공고와 ${val("bSido")} 공고)`:"")+" · 마감이 가까운 순";
+  $("#bList").innerHTML=list.slice(0,bShown).map(it=>{
+    const dl=it.end?M.daysLeft(it.end):null;
+    return `<div class="notice"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
+      <div class="s">${dl!==null&&dl<=7?`<span class="tag hot">D-${dl}</span>`:""}<span class="tag">${esc(it.field)}</span>${esc(it.org||"")} · ${esc(it.period||"")}</div>${sumHTML(it.summary)}</div>`}).join("")
+    ||'<p class="empty">조건에 맞는 공고가 없습니다. 다른 분류를 눌러 보세요.</p>';
+  $("#bMore").hidden=list.length<=bShown;
 }
 
 /* ---------- 제출: 구글 Apps Script 웹 앱으로 보내면 구글 드라이브의 시트와 백업 폴더에 저장된다 ---------- */
@@ -349,15 +420,23 @@ document.querySelectorAll(".firm").forEach(e=>e.textContent=CFG.FIRM_NAME||"");
 $("#firmContact").textContent=CFG.FIRM_CONTACT?" (문의: "+CFG.FIRM_CONTACT+")":"";
 $("#retention").textContent=CFG.RETENTION||"";$("#mretention").textContent=CFG.MARKETING_RETENTION||"";
 $("#sido").innerHTML='<option value="">시도 선택</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
-$("#section").innerHTML='<option value="">선택</option>'+Object.keys(SECTIONS).map(k=>`<option value="${k}">${k}. ${SECTIONS[k]}</option>`).join("");
+$("#bSido").innerHTML='<option value="">지역 전체</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
 $("#needs").innerHTML=RULES.needs.map(n=>`<label><input type="checkbox" id="need_${esc(n.key)}" value="${esc(n.key)}">${esc(n.label)}</label>`).join("");
-$("#exceptions").innerHTML=((RULES.programs[0]||{}).under5_exceptions||[]).filter(e=>!e.auto).map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.key)}">${esc(e.label)}</label>`).join("");
+$("#exceptions").innerHTML=((RULES.programs[0]||{}).under5_exceptions||[]).map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.key)}">${esc(e.label)}</label>`).join("");
 $("#dataMeta").textContent=DATA.count?`기업마당 진행 공고 ${won(DATA.count)}건 기준 (${DATA.collected_at} 수집)`:"";
 if(!CFG.REQUIRE_CONSENT_TO_VIEW)$("#submit").textContent="동의하고 제출";
-$("#f").addEventListener("input",()=>{toggle();clearTimeout(timer);timer=setTimeout(run,250)});
+$("#f").addEventListener("input",()=>{
+  toggle();clearTimeout(timer);timer=setTimeout(run,250);
+  if(!bSidoTouched&&val("sido")&&val("bSido")!==val("sido")){$("#bSido").value=val("sido");bShown=30;renderBrowse()}   // 입력한 지역을 둘러보기에도 반영
+});
 $("#filters").addEventListener("click",e=>{const b=e.target.closest("[data-need]");if(b){needFilter=b.dataset.need||null;render()}});
+$("#bCats").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(b){bCat=b.dataset.cat;bShown=30;renderBrowse()}});
+$("#bInds").addEventListener("click",e=>{const b=e.target.closest("[data-ind]");if(b){bInd=b.dataset.ind||null;bShown=30;renderBrowse()}});
+$("#bSido").addEventListener("change",()=>{bSidoTouched=true;bShown=30;renderBrowse()});
+$("#bSearch").addEventListener("input",()=>{bShown=30;renderBrowse()});
+$("#bMore").addEventListener("click",()=>{bShown+=30;renderBrowse()});
 $("#submit").addEventListener("click",onSubmit);
-toggle();
+toggle();renderEasy();renderBrowse();
 })();
 </script>
 </body>

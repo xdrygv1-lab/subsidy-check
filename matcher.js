@@ -3,50 +3,54 @@
 (function(){
 "use strict";
 const RULES=window.RULES||{programs:[],needs:[]}, DATA=window.BIZINFO_DATA||{items:[],count:0,collected_at:null};
-const SMALL10=new Set(["B","C","F","H"]), EXCLUDED_WORDS=["유흥","주점","단란","무도","사행","카지노"];
+const SMALL10=new Set(["B","C","F","H"]), EXCLUDED_WORDS=["유흥","단란","무도","사행","카지노"], INDIRECT_WORDS=["인력공급","파견","경비","경호","시설관리"];
+const NTS=((RULES.programs||[])[0]||{}).nts||{};
 const GENERIC=new Set(["개발","서비스","판매","기타","관련","일반","지원","사업"]);
 const won=n=>Math.round(n).toLocaleString("ko-KR");
 const num=(v,d=null)=>{if(v===null||v===undefined||v==="")return d;const x=parseFloat(String(v).replace(/,/g,""));return isNaN(x)?d:x};
-const ksic=c=>String(c.ksic_code||"").replace(/\D/g,"");
+const codeOf=c=>String(c.industry_code||"").replace(/\D/g,"");
+/* 업종 대분류: 국세청 업종코드(6자리) 앞자리로 추정 */
+function sectionOf(c){const code=codeOf(c);if(!code)return "";for(const k of Object.keys(NTS.section_special||{}))if(code.startsWith(k))return NTS.section_special[k];const two=code.slice(0,2);for(const r of (NTS.section_ranges||[]))if(r[0]<=two&&two<=r[1])return r[2];return ""}
 const prefixHit=(code,table)=>{if(!code)return null;for(const k of Object.keys(table))if(code.startsWith(k))return k+" "+table[k];return null};
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysLeft(end){const a=end.split("-").map(Number),t=todayISO().split("-").map(Number);return Math.round((Date.UTC(a[0],a[1]-1,a[2])-Date.UTC(t[0],t[1]-1,t[2]))/86400000)}
 function monthsSince(ym){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(ym||""));if(!m)return null;const d=new Date();return (d.getFullYear()-+m[1])*12+d.getMonth()+1-+m[2]}
-const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(c.ksic_section)?10:5);
+const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(sectionOf(c))?10:5);
 const sameSido=(s,list)=>!list||!list.length||list.includes(s);
 function sigunguState(c,list){if(!list||!list.length)return "match";const where=((c.sigungu||"")+" "+(c.address||"")).trim();if(!where)return "unknown";return list.some(s=>where.includes(s))?"match":"other"}
 const isOpen=(it,today)=>!it.end||it.end>=today;
 
 function evalYouthLeap(prog,c,notices){
   const p=prog.params,n=num(c.insured,0),sido=c.sido||"",capital=p.capital_region.includes(sido);
-  const ptype=prog.types.find(t=>t.key===(capital?"수도권":"비수도권")),flags=c.flags||{},code=ksic(c);
+  const ptype=prog.types.find(t=>t.key===(capital?"수도권":"비수도권")),flags=c.flags||{},code=codeOf(c);
   const labels=Object.fromEntries(prog.conditions.map(x=>[x.key,x])),results=[];
   const add=(key,status,message)=>results.push({key,label:labels[key].label,status,message,detail:labels[key].detail,source:labels[key].source});
   const excLabels=Object.fromEntries(prog.under5_exceptions.map(e=>[e.key,e.label]));
-  const knowledge=prefixHit(code,prog.knowledge_service_ksic.codes);
+  const knowledge=prefixHit(code,NTS.knowledge_prefixes||{});
   const chosen=(flags.exceptions||[]).filter(k=>excLabels[k]).map(k=>excLabels[k]);
   if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명`);
   else if(n>=p.min_insured_exception){
-    if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외에 해당`);
+    if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 국세청 업종코드 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
-    else if(!code)add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 업종코드를 넣으면 지식서비스산업 여부를 자동 판정`);
+    else if(!code)add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 국세청 업종코드를 넣거나 해당하는 예외 항목을 선택`);
     else add("insured","fail",`${n}명. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
   }else add("insured","fail","고용보험 가입자가 없음");
 
-  const limits=prog.priority_company_limits,limit=limits[c.ksic_section||""]||limits.default;
+  const limits=prog.priority_company_limits,limit=limits[sectionOf(c)]||limits.default;
   if(n<=limit)add("priority","pass",`상시근로자 ${limit}명 이하 업종 기준 충족`);
   else if(!capital&&flags.mid_size_in_complex)add("priority","pass","비수도권 산업단지 입주 중견기업으로 입력됨");
   else add("priority","check",`업종 기준(${limit}명) 초과. 중소기업기본법상 중소기업이면 가능`);
 
   const sales=num(c.sales_manwon),need=n*p.sales_per_insured_manwon,age=monthsSince(c.founded);
   if(age!==null&&age<12)add("sales","pass","업력 1년 미만으로 매출액 심사 제외");
-  else if(sales===null)add("sales","check",`연 매출 ${won(need)}만원 이상인지 확인 (가입자 ${n}명 x ${won(p.sales_per_insured_manwon)}만원)`);
-  else if(sales>=need)add("sales","pass",`연 매출 ${won(sales)}만원 >= 기준 ${won(need)}만원`);
-  else add("sales","fail",`연 매출 ${won(sales)}만원 < 기준 ${won(need)}만원`);
+  else if(sales===null)add("sales","check",`직전연도 매출이 ${won(need)}만원 이상인지 확인 (가입자 ${n}명 x ${won(p.sales_per_insured_manwon)}만원)`);
+  else if(sales>=need)add("sales","pass",`직전연도 매출 ${won(sales)}만원 >= 기준 ${won(need)}만원`);
+  else add("sales","fail",`직전연도 매출 ${won(sales)}만원 < 기준 ${won(need)}만원`);
 
-  const text=c.industry_text||"",excluded=code.length>=5?prefixHit(code,prog.excluded_ksic.codes):null;
-  if(excluded||EXCLUDED_WORDS.some(w=>text.includes(w)))add("industry","fail",`지원 제외 업종으로 보임 (${excluded||text})`);
-  else if(code.slice(0,4)==="7512"||code==="75310"||code==="74100")add("industry","check","인력공급·경비·시설관리업은 간접고용 형태 채용자가 제외됨");
+  const text=c.industry_text||"",liquor=prefixHit(code,NTS.liquor_prefixes||{}),indirect=prefixHit(code,NTS.indirect_hire_prefixes||{})||INDIRECT_WORDS.some(w=>text.includes(w));
+  if(EXCLUDED_WORDS.some(w=>text.includes(w)))add("industry","fail",`지원 제외 업종으로 보임 (${text})`);
+  else if(liquor)add("industry","check","주점업 중 일반유흥·무도유흥·기타 주점업은 지원 제외. 세부 업종 확인 필요");
+  else if(indirect)add("industry","check","인력공급·경비·시설관리업은 간접고용 형태 채용자가 제외됨");
   else add("industry","pass","제외 업종 아님 (입력 기준)");
 
   const plan=c.hire_plan||"없음",hireN=Math.floor(num(c.hire_count,0)||0);let hireReady=false;
@@ -94,7 +98,7 @@ function evalYouthLeap(prog,c,notices){
   }
   related.sort((a,b)=>(a.scope==="관할 일치"?0:1)-(b.scope==="관할 일치"?0:1));
   return {id:prog.id,need:prog.need,name:`${prog.name} (${prog.year})`,ministry:prog.ministry,type:ptype,verdict,level,conditions:results,estimate,
-    apply:prog.apply,related,hard:capital?prog.hard_to_employ_youth:[],excludedYouth:prog.excluded_youth,sources:prog.sources,caution:prog.caution};
+    apply:prog.apply,related,hard:capital?prog.hard_to_employ_youth:[],excludedYouth:prog.excluded_youth,sources:prog.sources,caution:prog.caution,easy:prog.easy||null};
 }
 const EVALUATORS={"youth-leap-2026":evalYouthLeap};
 
@@ -127,7 +131,7 @@ function matchNotices(c,notices,needsDef,limit){
       else if(title.includes("소상공인")){score-=3;flags.push("소상공인 전용일 수 있음")}
     }
     let dl=null;if(it.end){dl=daysLeft(it.end);if(dl<=7)flags.push("마감 임박")}
-    out.push({title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,needs:hit,reasons,flags,score});
+    out.push({title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,summary:it.summary||"",needs:hit,reasons,flags,score});
   }
   out.sort((a,b)=>b.score-a.score||(a.end||"9999").localeCompare(b.end||"9999")||(a.posted||"").localeCompare(b.posted||""));
   return out.slice(0,limit||80);
@@ -138,5 +142,5 @@ function evaluate(c){
   return {programs,notices:matchNotices(c,DATA.items,RULES.needs,80)};
 }
 
-window.Matcher={evaluate,todayISO,won,RULES,DATA};
+window.Matcher={evaluate,todayISO,daysLeft,won,RULES,DATA};
 })();
