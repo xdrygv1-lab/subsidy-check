@@ -100,9 +100,25 @@ details a{font-weight:500;color:var(--accent);text-decoration:none}
 .qa dt{font-weight:700;font-size:14px}
 .qa dd{margin:0;font-size:14px}
 @media (max-width:520px){.qa>div{grid-template-columns:minmax(0,1fr)}}
-details.sum{border:0;margin:4px 0 0;padding:0}
+details.sum{border:0;margin:6px 0 0;padding:0}
 .sum summary{font-size:13px;font-weight:500;color:var(--accent)}
-.sum p{margin:6px 0 0;font-size:13px;color:var(--sub)}
+.sumdl{margin:10px 0 0;border:1px solid var(--line);border-radius:8px;background:var(--field);overflow:hidden}
+.sumdl>div{display:grid;grid-template-columns:84px minmax(0,1fr);gap:4px 14px;padding:10px 14px;border-top:1px solid var(--line)}
+.sumdl>div:first-child{border-top:0}
+.sumdl dt{font-size:13px;font-weight:700;color:var(--sub)}
+.sumdl dd{margin:0;font-size:14px}
+.sumdl dd p{margin:0}
+.sumdl dd ul{margin:0;padding-left:18px;color:var(--ink);font-size:14px}
+.sumdl dd li+li{margin-top:3px}
+.sumdl .nt{margin-top:5px;font-size:12.5px;color:var(--sub)}
+@media (max-width:520px){.sumdl>div{grid-template-columns:minmax(0,1fr)}}
+.sumlinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+a.btn{display:inline-block;padding:7px 14px;border-radius:7px;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700;text-decoration:none;border:1px solid var(--accent)}
+a.btn.ghost{background:transparent;color:var(--accent)}
+.notice a.btn:hover,details a.btn:hover{color:var(--accent-ink);text-decoration:none;opacity:.9}
+.notice a.btn.ghost:hover,details a.btn.ghost:hover{color:var(--accent)}
+.inline{display:flex;gap:7px;align-items:center;font-size:13.5px;cursor:pointer}
+.inline input{accent-color:var(--accent)}
 #browse .chips+.chips{padding-top:2px}
 #bMore{margin-top:12px;width:100%}
 footer{padding-block:8px 32px;padding-inline:max(16px,calc((100% - 1320px)/2));font-size:12.5px;color:var(--sub)}
@@ -134,13 +150,15 @@ footer p{margin:4px 0;max-width:90ch}
 
       <div class="group"><span class="gt">업종과 매출</span>
         <div class="two">
-          <div class="fld"><label for="industry_text">업태·종목</label><input type="text" id="industry_text" placeholder="예: 소프트웨어 개발" maxlength="60"></div>
-          <div class="fld"><label for="industry_code">국세청 업종코드 (선택)</label><input type="text" id="industry_code" placeholder="6자리 (예: 722000)" inputmode="numeric" maxlength="6"></div>
+          <div class="fld"><label for="upte">업태</label><select id="upte"></select></div>
+          <div class="fld"><label for="jmSearch">종목 찾기</label><input type="text" id="jmSearch" placeholder="예: 커피, 소프트웨어" maxlength="20" disabled></div>
         </div>
-        <p class="hint">업종코드는 사업자등록증이나 세금 신고서에 적힌 6자리 숫자입니다. 모르면 비워 두세요.</p>
+        <div class="fld"><label for="jongmok">종목</label><select id="jongmok" disabled><option value="">업태를 먼저 고르세요</option></select></div>
+        <div class="fld"><label for="industry_code">국세청 업종코드 (자동 입력)</label><input type="text" id="industry_code" placeholder="종목을 고르면 자동으로 들어갑니다" inputmode="numeric" maxlength="6">
+          <p class="hint" id="codeHint">사업자등록증의 업태와 종목을 고르면 됩니다. 코드는 몰라도 괜찮습니다.</p></div>
         <div class="two">
           <div class="fld"><label for="sales_manwon">직전연도 연 매출액 (만원, 선택)</label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
-          <div class="fld"><label for="founded">개업 연월 (선택)</label><input type="month" id="founded"></div>
+          <div class="fld"><label for="founded">개업 연월</label><input type="month" id="founded"></div>
         </div>
       </div>
 
@@ -183,7 +201,7 @@ footer p{margin:4px 0;max-width:90ch}
           <div class="fld"><label for="contact_name" class="req">성명</label><input type="text" id="contact_name" name="name" autocomplete="name" maxlength="30"></div>
           <div class="fld"><label for="contact_phone" class="req">연락처</label><input type="tel" id="contact_phone" name="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="20"></div>
         </div>
-        <div class="fld"><label for="contact_email">이메일 (선택)</label><input type="email" id="contact_email" name="email" autocomplete="email" maxlength="80"></div>
+        <div class="fld"><label for="contact_email" class="req">이메일</label><input type="email" id="contact_email" name="email" autocomplete="email" maxlength="80"></div>
         <div class="hp" aria-hidden="true"><label for="website">비워 두세요</label><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
       </div>
 
@@ -193,7 +211,7 @@ footer p{margin:4px 0;max-width:90ch}
           <details><summary>내용 보기</summary>
             <table>
               <tr><th>수집·이용 목적</th><td>지원금 해당 여부 확인 결과 제공, 결과에 대한 문의 응대, 서비스 시험 운영과 개선</td></tr>
-              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 필요한 지원, 담당자 성명, 연락처, 이메일(입력한 경우)</td></tr>
+              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 필요한 지원, 담당자 성명, 연락처, 이메일</td></tr>
               <tr><th>보유·이용 기간</th><td><strong id="retention"></strong>. 기간이 지나거나 삭제를 요청하면 지체 없이 파기합니다.</td></tr>
               <tr><th>보관 위치</th><td>수집한 정보는 <span class="firm"></span>이(가) 관리하는 Google Drive(Google LLC의 클라우드, 국외 서버 포함)에 보관됩니다.</td></tr>
               <tr><th>동의 거부</th><td>동의를 거부할 수 있습니다. 거부하면 결과 확인 서비스를 이용할 수 없습니다.</td></tr>
@@ -251,6 +269,7 @@ footer p{margin:4px 0;max-width:90ch}
           <select id="bSido" aria-label="지역"></select>
           <input type="text" id="bSearch" placeholder="공고 제목 검색" aria-label="공고 제목 검색" maxlength="40">
         </div>
+        <label class="inline" id="bNatWrap" hidden><input type="checkbox" id="bNational">전국 어디서나 신청할 수 있는 공고도 함께 보기</label>
         <p class="hint" id="bCount"></p>
       </div>
       <div id="bList"></div>
@@ -267,13 +286,14 @@ footer p{margin:4px 0;max-width:90ch}
 <script src="config.js"></script>
 <script src="rules.js"></script>
 <script src="data.js"></script>
+<script src="industry.js"></script>
 <script src="matcher.js"></script>
 <script>
 (function(){
 "use strict";
 const CFG=window.SITE_CONFIG||{}, M=window.Matcher, RULES=M.RULES, DATA=M.DATA, won=M.won;
 const SIDO=["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원","충북","충남","전북","전남","경북","경남","제주"];
-const INDUSTRIES=[["제조업",["제조","공장","뿌리","소부장","부품"]],["음식·숙박",["음식","외식","식당","숙박","위생업소"]],["도소매·유통",["유통","소매","도매","상점","전통시장","입점"]],["IT·소프트웨어",["소프트웨어","SW","ICT","AI","인공지능","데이터","디지털","클라우드"]],["건설",["건설","건축","시공"]],["농식품",["농업","농식품","식품","농산물","수산","축산"]],["관광·콘텐츠",["관광","콘텐츠","게임","영상","공연"]],["바이오·의료",["바이오","의료","헬스케어","제약"]]];
+const INDUSTRIES=[["제조업",["제조","공장","뿌리","소부장","부품"]],["음식·숙박",["음식점","외식","식당","숙박업","숙박시설","위생업소"]],["도소매·유통",["유통","소매","도매","상점","전통시장","입점"]],["IT·소프트웨어",["소프트웨어","SW","ICT","AI","인공지능","데이터","디지털","클라우드"]],["건설",["건설","건축","시공"]],["농식품",["농업","농식품","식품","농산물","수산","축산"]],["관광·콘텐츠",["관광","콘텐츠","게임","영상","공연"]],["바이오·의료",["바이오","의료","헬스케어","제약"]]];
 const ST={pass:"충족",fail:"미충족",check:"확인 필요",info:"참고"};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -282,12 +302,44 @@ let unlocked=!CFG.REQUIRE_CONSENT_TO_VIEW,lastResult=null,needFilter=null,timer=
 
 function readCompany(){
   return {name:val("name"),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
-    industry_code:val("industry_code"),industry_text:val("industry_text"),sales_manwon:val("sales_manwon"),founded:val("founded"),
+    industry_code:val("industry_code"),industry_text:industryText(),industry_hint:industryHint(),sales_manwon:val("sales_manwon"),founded:val("founded"),
     hire_plan:val("hire_plan"),hire_count:val("hire_count"),hire_youth:$("#hire_youth").checked,hire_regular:$("#hire_regular").checked,hire_hard:val("hire_hard"),
     flags:{mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked,
       exceptions:[...document.querySelectorAll("#exceptions input:checked")].map(i=>i.value)},
     needs:[...document.querySelectorAll("#needs input:checked")].map(i=>i.value)};
 }
+/* ---------- 업태·종목 드롭다운: 국세청 업종코드표의 대분류(업태)와 세세분류(종목). 종목을 고르면 업종코드가 자동으로 들어간다 ---------- */
+const GROUPS=(M.INDUSTRY||{}).groups||[];
+const groupOf=()=>GROUPS.find(x=>x.upte===val("upte"))||null;
+function currentItem(){const g=groupOf(),i=val("jongmok");return {g,it:g&&i!==""?g.items[+i]:null}}
+function industryText(){const {g,it}=currentItem();return g?(g.upte+(it?" / "+it.n:"")):""}
+function industryHint(){
+  const {g,it}=currentItem();if(!g)return {};
+  const typed=val("industry_code");
+  if(it&&typed&&typed!==it.c)return {};                 // 코드를 직접 고쳤으면 그 코드로 다시 조회한다
+  return it?{section:g.section,f:it.f||""}:{section:g.section};
+}
+function fillJongmok(){
+  const g=groupOf(),sel=$("#jongmok"),q=val("jmSearch"),keep=sel.value;
+  if(!g){sel.innerHTML='<option value="">업태를 먼저 고르세요</option>';return}
+  const byMid=new Map();
+  g.items.forEach((x,i)=>{if(q&&!(x.n+" "+(x.d||"")+" "+x.c).includes(q))return;if(!byMid.has(x.m))byMid.set(x.m,[]);byMid.get(x.m).push([i,x])});
+  let n=0;const html=[...byMid].map(([mid,list])=>`<optgroup label="${esc(mid)}">${list.map(([i,x])=>{n++;return `<option value="${i}">${esc(x.n)}${x.d?" · "+esc(x.d):""} (${esc(x.c)})</option>`}).join("")}</optgroup>`).join("");
+  sel.innerHTML=`<option value="">${n?`종목 선택 (${n}개)`:"찾는 종목이 없습니다"}</option>`+html;
+  if(keep!==""&&sel.querySelector(`option[value="${keep}"]`))sel.value=keep;
+}
+function onUpte(){
+  const g=groupOf();
+  $("#jongmok").disabled=!g;$("#jmSearch").disabled=!g;$("#jmSearch").value="";$("#jongmok").value="";
+  fillJongmok();$("#industry_code").value="";onJongmok();
+  if(g&&g.browse&&!bIndTouched){bInd=g.browse;bShown=30;renderBrowse()}      // 고른 업태를 둘러보기에도 반영
+}
+function onJongmok(){
+  const {it}=currentItem(),code=$("#industry_code"),hint=$("#codeHint");
+  if(it){code.value=it.c;hint.textContent="국세청 업종코드표("+((M.INDUSTRY||{}).year_label||"최신")+")에서 자동으로 넣었습니다. 사업자등록증과 다르면 고쳐 주세요."}
+  else hint.textContent="사업자등록증의 업태와 종목을 고르면 됩니다. 코드는 몰라도 괜찮습니다.";
+}
+
 function toggle(){
   $("#hireMore").hidden=$("#hire_plan").value==="없음";
   const n=parseFloat($("#insured").value);$("#excBox").hidden=!(n>0&&n<5);
@@ -299,7 +351,8 @@ function validate(){
   if(val("insured")==="")return showFormMsg("4대보험 가입자 수를 입력해 주세요. 없으면 0을 넣습니다.","insured"),false;
   if(!val("contact_name"))return showFormMsg("담당자 성명을 입력해 주세요.","contact_name"),false;
   if(val("contact_phone").replace(/\D/g,"").length<9)return showFormMsg("연락처를 정확히 입력해 주세요.","contact_phone"),false;
-  const em=val("contact_email");if(em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))return showFormMsg("이메일 형식을 확인해 주세요.","contact_email"),false;
+  const em=val("contact_email");if(!em)return showFormMsg("이메일을 입력해 주세요.","contact_email"),false;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))return showFormMsg("이메일 형식을 확인해 주세요.","contact_email"),false;
   if(!$("#consent_required").checked)return showFormMsg("[필수] 개인정보 수집·이용에 동의해야 결과를 확인할 수 있습니다.","consent_required"),false;
   showFormMsg("");return true;
 }
@@ -317,7 +370,7 @@ function render(){
       ${p.estimate?`<div class="money">예상 기업 지원금 <strong>최대 ${won(p.estimate.company_manwon)}만원</strong> (청년 ${p.estimate.heads}명 기준)<p class="hint">${esc(p.estimate.note)}</p>${p.estimate.youth_note?`<p class="hint">${esc(p.estimate.youth_note)}</p>`:""}</div>`:""}
       <ul class="cond">${p.conditions.map(c=>`<li><span class="st ${c.status}">${ST[c.status]}</span><div><div class="t">${esc(c.label)}</div><div class="m">${esc(c.message)}</div><div class="d">${esc(c.detail)}</div></div></li>`).join("")}</ul>
       <details ${p.related.length?"open":""}><summary>관할 운영기관 공고 ${p.related.length}건</summary>
-        ${p.related.map(n=>`<div class="notice"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="s"><span class="tag ${n.scope==="관할 일치"?"good":""}">${esc(n.scope)}</span>${esc(n.agency||"")} · ${esc(n.period||"")}${n.contact?" · "+esc(n.contact):""}</div></div>`).join("")||'<p class="hint" style="margin-top:8px">현재 기업마당에 이 지역 운영기관 공고가 없습니다. 고용24에서 운영기관을 직접 검색하세요.</p>'}
+        ${p.related.map(n=>`<div class="notice"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="s"><span class="tag ${n.scope==="관할 일치"?"good":""}">${esc(n.scope)}</span>${esc(n.agency||"")} · ${esc(n.period||"")}${n.contact?" · "+esc(n.contact):""}</div>${linksHTML(n)}</div>`).join("")||'<p class="hint" style="margin-top:8px">현재 기업마당에 이 지역 운영기관 공고가 없습니다. 고용24에서 운영기관을 직접 검색하세요.</p>'}
       </details>
       ${p.hard.length?`<details><summary>취업애로청년 요건 (1개 이상 해당)</summary><ul>${p.hard.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></details>`:""}
       <details><summary>지원 제외 청년</summary><ul>${p.excludedYouth.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></details>
@@ -332,14 +385,27 @@ function render(){
   $("#notices").innerHTML=list.map(n=>`<div class="notice">
       <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a>
       <div class="s">${n.flags.map(x=>`<span class="tag ${x==="마감 임박"?"hot":""}">${esc(x)}</span>`).join("")}<span class="tag">${esc(n.field)}</span>${esc(n.org||"")} · ${esc(n.period||"")}${n.days_left!==null&&n.days_left>=0?` (D-${n.days_left})`:""}</div>
-      <div class="s">${esc(n.reasons.join(" / "))}</div>${sumHTML(n.summary)}
+      <div class="s">${esc(n.reasons.join(" / "))}</div>${sumHTML(n)}
     </div>`).join("")||'<p class="empty">조건에 맞는 진행 중 공고가 없습니다.</p>';
 }
 /* 기업마당 사업개요를 읽기 쉽게 줄바꿈해서 보여준다 */
-function sumHTML(s){
-  if(!s)return "";
-  const lines=s.replace(/☞/g,"\n☞ ").replace(/※/g,"\n※ ").split(/\n+/).map(x=>x.trim()).filter(Boolean);
-  return `<details class="sum"><summary>요약 보기</summary><p>${lines.map(esc).join("<br>")}${s.length>=500?" …":""}</p></details>`;
+function sumHTML(n){
+  const ps=M.parseSummary(n.summary),rows=[];
+  if(ps.intro)rows.push(["사업 개요",`<p>${esc(ps.intro)}</p>`]);
+  for(const b of ps.blocks)rows.push([b.label,
+    (b.lines.length>1?`<ul>${b.lines.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:`<p>${esc(b.lines[0]||"")}</p>`)
+    +b.notes.map(x=>`<p class="nt">※ ${esc(x)}</p>`).join("")]);
+  if(n.period)rows.push(["신청 기간",`<p>${esc(n.period)}</p>`]);
+  if(n.how)rows.push(["신청 방법",`<p>${esc(n.how)}</p>`]);
+  if(n.contact)rows.push(["문의처",`<p>${esc(n.contact)}</p>`]);
+  if(!rows.length)return linksHTML(n);
+  return `<details class="sum"><summary>요약 보기</summary><dl class="sumdl">${rows.map(r=>`<div><dt>${esc(r[0])}</dt><dd>${r[1]}</dd></div>`).join("")}</dl>${linksHTML(n)}</details>`;
+}
+/* 공고마다 신청 페이지와 원문으로 바로 가는 버튼 */
+function linksHTML(n){
+  const safe=u=>/^https?:\/\//.test(u||"")?u:"";
+  const a=safe(n.apply_url),u=safe(n.url);
+  return `<div class="sumlinks">${a?`<a class="btn" href="${esc(a)}" target="_blank" rel="noopener">온라인 신청 바로가기</a>`:""}${u?`<a class="btn ghost" href="${esc(u)}" target="_blank" rel="noopener">공고 원문 보기</a>`:""}</div>`;
 }
 
 /* ---------- 지원금 쉬운 설명 ---------- */
@@ -348,18 +414,19 @@ function renderEasy(){
   if(!p||!p.easy){$("#easy").hidden=true;return}
   $("#easy").innerHTML=`<h2>${esc(p.name)}, 쉽게 말하면</h2><p class="lead">${esc(p.easy.one_line)}</p>
     <dl class="qa">${p.easy.items.map(x=>`<div><dt>${esc(x.q)}</dt><dd>${esc(x.a)}</dd></div>`).join("")}</dl>
-    <p class="hint">${esc(p.caution)}</p>`;
+    <div class="sumlinks"><a class="btn" href="https://www.work24.go.kr" target="_blank" rel="noopener">고용24에서 참여 신청하기</a></div>
+    <p class="hint" style="margin-top:10px">${esc(p.caution)}</p>`;
 }
 
 /* ---------- 지원사업 둘러보기: 입력 없이도 분류를 눌러 볼 수 있다 ---------- */
-let bCat="deadline",bInd=null,bShown=30,bSidoTouched=false;
+let bCat="deadline",bInd=null,bShown=30,bSidoTouched=false,bIndTouched=false;
 function browseItems(){
   const today=M.todayISO(),sido=val("bSido"),q=val("bSearch");
   let list=DATA.items.filter(it=>!it.end||it.end>=today);
   if(bCat==="deadline")list=list.filter(it=>it.end&&M.daysLeft(it.end)<=7);
   else if(bCat!=="all"){const nd=RULES.needs.find(n=>n.key===bCat);list=list.filter(it=>nd.fields.includes(it.field)||nd.keywords.some(k=>it.title.includes(k)))}
-  if(bInd){const kw=INDUSTRIES.find(x=>x[0]===bInd)[1];list=list.filter(it=>{const t=it.title+" "+(it.summary||"");return kw.some(k=>t.includes(k))})}
-  if(sido)list=list.filter(it=>!it.sido||!it.sido.length||it.sido.includes(sido));
+  if(bInd){const kw=INDUSTRIES.find(x=>x[0]===bInd)[1];list=list.filter(it=>{const t=it.title+" "+(it.tags||[]).join(" ");return kw.some(k=>t.includes(k))})}
+  if(sido){const nat=$("#bNational").checked;list=list.filter(it=>(it.sido&&it.sido.includes(sido))||(nat&&(!it.sido||!it.sido.length)))}
   if(q)list=list.filter(it=>it.title.includes(q));
   return list.sort((a,b)=>(a.end||"9999").localeCompare(b.end||"9999")||(b.posted||"").localeCompare(a.posted||""));
 }
@@ -368,11 +435,12 @@ function renderBrowse(){
   $("#bCats").innerHTML=cats.map(c=>`<button type="button" class="chip" aria-pressed="${bCat===c[0]}" data-cat="${esc(c[0])}">${esc(c[1])}</button>`).join("");
   $("#bInds").innerHTML=`<button type="button" class="chip" aria-pressed="${!bInd}" data-ind="">업종 전체</button>`+INDUSTRIES.map(x=>`<button type="button" class="chip" aria-pressed="${bInd===x[0]}" data-ind="${esc(x[0])}">${esc(x[0])}</button>`).join("");
   const list=browseItems();
-  $("#bCount").textContent=`${won(list.length)}건`+(val("bSido")?` (전국 공고와 ${val("bSido")} 공고)`:"")+" · 마감이 가까운 순";
+  $("#bNatWrap").hidden=!val("bSido");
+  $("#bCount").textContent=`${won(list.length)}건`+(val("bSido")?` · ${val("bSido")} 지역 공고`+($("#bNational").checked?"와 전국 공고":"만"):"")+(bInd?` · ${bInd}`:"")+" · 마감이 가까운 순";
   $("#bList").innerHTML=list.slice(0,bShown).map(it=>{
     const dl=it.end?M.daysLeft(it.end):null;
     return `<div class="notice"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
-      <div class="s">${dl!==null&&dl<=7?`<span class="tag hot">D-${dl}</span>`:""}<span class="tag">${esc(it.field)}</span>${esc(it.org||"")} · ${esc(it.period||"")}</div>${sumHTML(it.summary)}</div>`}).join("")
+      <div class="s">${dl!==null&&dl<=7?`<span class="tag hot">D-${dl}</span>`:""}<span class="tag">${esc(it.field)}</span>${esc(it.org||"")} · ${esc(it.period||"")}</div>${sumHTML(it)}</div>`}).join("")
     ||'<p class="empty">조건에 맞는 공고가 없습니다. 다른 분류를 눌러 보세요.</p>';
   $("#bMore").hidden=list.length<=bShown;
 }
@@ -420,6 +488,7 @@ document.querySelectorAll(".firm").forEach(e=>e.textContent=CFG.FIRM_NAME||"");
 $("#firmContact").textContent=CFG.FIRM_CONTACT?" (문의: "+CFG.FIRM_CONTACT+")":"";
 $("#retention").textContent=CFG.RETENTION||"";$("#mretention").textContent=CFG.MARKETING_RETENTION||"";
 $("#sido").innerHTML='<option value="">시도 선택</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
+$("#upte").innerHTML='<option value="">업태 선택</option>'+GROUPS.map(g=>`<option>${esc(g.upte)}</option>`).join("");
 $("#bSido").innerHTML='<option value="">지역 전체</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
 $("#needs").innerHTML=RULES.needs.map(n=>`<label><input type="checkbox" id="need_${esc(n.key)}" value="${esc(n.key)}">${esc(n.label)}</label>`).join("");
 $("#exceptions").innerHTML=((RULES.programs[0]||{}).under5_exceptions||[]).map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.key)}">${esc(e.label)}</label>`).join("");
@@ -431,7 +500,11 @@ $("#f").addEventListener("input",()=>{
 });
 $("#filters").addEventListener("click",e=>{const b=e.target.closest("[data-need]");if(b){needFilter=b.dataset.need||null;render()}});
 $("#bCats").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(b){bCat=b.dataset.cat;bShown=30;renderBrowse()}});
-$("#bInds").addEventListener("click",e=>{const b=e.target.closest("[data-ind]");if(b){bInd=b.dataset.ind||null;bShown=30;renderBrowse()}});
+$("#bInds").addEventListener("click",e=>{const b=e.target.closest("[data-ind]");if(b){bIndTouched=true;bInd=b.dataset.ind||null;bShown=30;renderBrowse()}});
+$("#bNational").addEventListener("change",()=>{bShown=30;renderBrowse()});
+$("#upte").addEventListener("change",onUpte);
+$("#jongmok").addEventListener("change",onJongmok);
+$("#jmSearch").addEventListener("input",()=>{fillJongmok();onJongmok()});
 $("#bSido").addEventListener("change",()=>{bSidoTouched=true;bShown=30;renderBrowse()});
 $("#bSearch").addEventListener("input",()=>{bShown=30;renderBrowse()});
 $("#bMore").addEventListener("click",()=>{bShown+=30;renderBrowse()});

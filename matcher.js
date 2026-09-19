@@ -4,13 +4,16 @@
 "use strict";
 const RULES=window.RULES||{programs:[],needs:[]}, DATA=window.BIZINFO_DATA||{items:[],count:0,collected_at:null};
 const SMALL10=new Set(["B","C","F","H"]), EXCLUDED_WORDS=["유흥","단란","무도","사행","카지노"], INDIRECT_WORDS=["인력공급","파견","경비","경호","시설관리"];
-const NTS=((RULES.programs||[])[0]||{}).nts||{};
+const IND=window.INDUSTRY||{groups:[],by_code:{}};      // 국세청 업종코드-표준산업분류 연계표 (industry.js)
 const GENERIC=new Set(["개발","서비스","판매","기타","관련","일반","지원","사업"]);
 const won=n=>Math.round(n).toLocaleString("ko-KR");
 const num=(v,d=null)=>{if(v===null||v===undefined||v==="")return d;const x=parseFloat(String(v).replace(/,/g,""));return isNaN(x)?d:x};
+/* 업종: 드롭다운에서 고른 종목의 속성(industry_hint)이 있으면 그것을, 없으면 업종코드로 연계표를 조회한다 */
+const hintOf=c=>c.industry_hint||{};
 const codeOf=c=>String(c.industry_code||"").replace(/\D/g,"");
-/* 업종 대분류: 국세청 업종코드(6자리) 앞자리로 추정 */
-function sectionOf(c){const code=codeOf(c);if(!code)return "";for(const k of Object.keys(NTS.section_special||{}))if(code.startsWith(k))return NTS.section_special[k];const two=code.slice(0,2);for(const r of (NTS.section_ranges||[]))if(r[0]<=two&&two<=r[1])return r[2];return ""}
+const infoOf=c=>IND.by_code[codeOf(c)]||null;
+const flagsOf=c=>hintOf(c).f!==undefined?String(hintOf(c).f||""):((infoOf(c)||{}).f||"");
+function sectionOf(c){return hintOf(c).section||(infoOf(c)||{}).s||""}
 const prefixHit=(code,table)=>{if(!code)return null;for(const k of Object.keys(table))if(code.startsWith(k))return k+" "+table[k];return null};
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysLeft(end){const a=end.split("-").map(Number),t=todayISO().split("-").map(Number);return Math.round((Date.UTC(a[0],a[1]-1,a[2])-Date.UTC(t[0],t[1]-1,t[2]))/86400000)}
@@ -26,11 +29,11 @@ function evalYouthLeap(prog,c,notices){
   const labels=Object.fromEntries(prog.conditions.map(x=>[x.key,x])),results=[];
   const add=(key,status,message)=>results.push({key,label:labels[key].label,status,message,detail:labels[key].detail,source:labels[key].source});
   const excLabels=Object.fromEntries(prog.under5_exceptions.map(e=>[e.key,e.label]));
-  const knowledge=prefixHit(code,NTS.knowledge_prefixes||{});
+  const iflags=flagsOf(c),knowledge=iflags.includes("K")?(c.industry_text||(infoOf(c)||{}).n||"선택한 종목"):null;
   const chosen=(flags.exceptions||[]).filter(k=>excLabels[k]).map(k=>excLabels[k]);
   if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명`);
   else if(n>=p.min_insured_exception){
-    if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 국세청 업종코드 기준 추정이며 운영기관이 최종 확인`);
+    if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
     else if(!code)add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 국세청 업종코드를 넣거나 해당하는 예외 항목을 선택`);
     else add("insured","fail",`${n}명. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
@@ -47,9 +50,9 @@ function evalYouthLeap(prog,c,notices){
   else if(sales>=need)add("sales","pass",`직전연도 매출 ${won(sales)}만원 >= 기준 ${won(need)}만원`);
   else add("sales","fail",`직전연도 매출 ${won(sales)}만원 < 기준 ${won(need)}만원`);
 
-  const text=c.industry_text||"",liquor=prefixHit(code,NTS.liquor_prefixes||{}),indirect=prefixHit(code,NTS.indirect_hire_prefixes||{})||INDIRECT_WORDS.some(w=>text.includes(w));
-  if(EXCLUDED_WORDS.some(w=>text.includes(w)))add("industry","fail",`지원 제외 업종으로 보임 (${text})`);
-  else if(liquor)add("industry","check","주점업 중 일반유흥·무도유흥·기타 주점업은 지원 제외. 세부 업종 확인 필요");
+  const text=c.industry_text||"",liquor=iflags.includes("L"),indirect=iflags.includes("I")||INDIRECT_WORDS.some(w=>text.includes(w));
+  if(iflags.includes("X")||EXCLUDED_WORDS.some(w=>text.includes(w)))add("industry","fail",`지원 제외 업종으로 보임 (${text})`);
+  else if(liquor)add("industry","check","소비·향락업(기타 주점업, 무도장, 사행시설 등)은 지원 제외 업종일 수 있음. 운영지침 확인 필요");
   else if(indirect)add("industry","check","인력공급·경비·시설관리업은 간접고용 형태 채용자가 제외됨");
   else add("industry","pass","제외 업종 아님 (입력 기준)");
 
@@ -94,7 +97,7 @@ function evalYouthLeap(prog,c,notices){
     const inBody=mine.some(w=>(it.summary||"").includes(w));
     const hasSg=it.sigungu&&it.sigungu.length;
     const scope=(hasSg&&st==="match")||inBody?"관할 일치":(!hasSg?"전국·광역 단위 (관할 확인)":"관할 확인 필요");
-    related.push({title:it.title,agency:it.agency,period:it.period,url:it.url,contact:it.contact,scope});
+    related.push({title:it.title,agency:it.agency,period:it.period,url:it.url,apply_url:it.apply_url||"",contact:it.contact,scope});
   }
   related.sort((a,b)=>(a.scope==="관할 일치"?0:1)-(b.scope==="관할 일치"?0:1));
   return {id:prog.id,need:prog.need,name:`${prog.name} (${prog.year})`,ministry:prog.ministry,type:ptype,verdict,level,conditions:results,estimate,
@@ -131,7 +134,7 @@ function matchNotices(c,notices,needsDef,limit){
       else if(title.includes("소상공인")){score-=3;flags.push("소상공인 전용일 수 있음")}
     }
     let dl=null;if(it.end){dl=daysLeft(it.end);if(dl<=7)flags.push("마감 임박")}
-    out.push({title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,summary:it.summary||"",needs:hit,reasons,flags,score});
+    out.push({title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
   }
   out.sort((a,b)=>b.score-a.score||(a.end||"9999").localeCompare(b.end||"9999")||(a.posted||"").localeCompare(b.posted||""));
   return out.slice(0,limit||80);
@@ -142,5 +145,24 @@ function evaluate(c){
   return {programs,notices:matchNotices(c,DATA.items,RULES.needs,80)};
 }
 
-window.Matcher={evaluate,todayISO,daysLeft,won,RULES,DATA};
+/* 기업마당 사업개요(한 줄로 이어진 글)를 개요 / 지원 대상 / 지원 내용으로 나눈다 */
+function parseSummary(s){
+  if(!s)return {intro:"",blocks:[]};
+  const parts=String(s).split("☞").map(x=>x.trim()),intro=parts.shift()||"";
+  const blocks=parts.filter(Boolean).map(p=>{
+    const segs=p.split("※").map(x=>x.trim()).filter(Boolean),main=segs.shift()||"";
+    const hint=segs.join(" ");
+    const notes=segs.filter(x=>!/^자세한 .{0,12}공고문 ?참조\.?$/.test(x));
+    const lines=main.replace(/([가-힣\)\.\]])\s?-\s+(?=\S)/g,"$1\n").split("\n").map(x=>x.trim()).filter(Boolean);
+    let label=null;
+    if(/지원대상|신청자격|참여대상|모집대상/.test(hint))label="지원 대상";
+    else if(/지원내용|지원사항|지원규모/.test(hint))label="지원 내용";
+    return {label,lines,notes};
+  });
+  const n=blocks.length;
+  blocks.forEach((b,i)=>{if(!b.label)b.label=n===1?"주요 내용":i===0?"지원 대상":i===1?"지원 내용":"기타 안내"});
+  return {intro,blocks};
+}
+
+window.Matcher={evaluate,todayISO,daysLeft,parseSummary,won,RULES,DATA,INDUSTRY:IND};
 })();

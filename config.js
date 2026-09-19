@@ -1,7 +1,7 @@
 /* 공개 웹페이지 설정. 값만 바꾸면 화면과 동의문에 바로 반영된다. */
 window.SITE_CONFIG = {
   // 구글 Apps Script 웹 앱 주소 (구글드라이브_연결방법.md 참고). 비어 있으면 제출 내용이 저장되지 않는 시험 모드로 동작한다.
-  SUBMIT_URL: "",
+  SUBMIT_URL: "https://script.google.com/macros/s/AKfycbydbuoK4GgBk54XaTuvtCIyqa_Z6RUX6KQtNkbgMvFk231I7dcR7Sgtm9jDtpOcuqP0QQ/exec",
 
   SITE_TITLE: "우리 회사 지원금 확인",
   FIRM_NAME: "세무회계홍인",
