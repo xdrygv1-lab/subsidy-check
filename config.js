@@ -5,7 +5,7 @@ window.SITE_CONFIG = {
 
   SITE_TITLE: "우리 회사 지원금 확인",
   FIRM_NAME: "세무회계홍인",
-  FIRM_CONTACT: "",                 // 예: "02-000-0000 / help@example.com" (개인정보 문의처로 동의문에 표시)
+  FIRM_CONTACT: "062-710-4722 / jsktax0509@naver.com",               // 예: "02-000-0000 / help@example.com" (개인정보 문의처로 동의문에 표시)
 
   // 동의문에 들어가는 값
   CONSENT_VERSION: "2026-09-19-3",   // 세금 환급 확인 항목, 사업자등록번호, 유입 경로, 세무·경정청구 서비스 안내를 추가한 판
