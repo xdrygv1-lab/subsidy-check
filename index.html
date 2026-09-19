@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>우리 회사 지원금 확인</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<meta name="description" content="지역, 직원 수, 업종만 넣으면 더 낸 세금을 돌려받을 가능성과 받을 수 있는 지원금을 바로 확인합니다. 세무회계홍인.">
+<meta name="theme-color" content="#0B1B3A">
+<meta property="og:type" content="website">
+<meta property="og:title" content="돌려받을 세금과 지원금, 한 번에 확인">
+<meta property="og:description" content="연락처 없이 1분. 더 낸 세금을 돌려받을 가능성과 우리 회사에 맞는 지원금을 바로 확인하세요. 세무회계홍인">
+<meta property="og:image" content="https://xdrygv1-lab.github.io/subsidy-check/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1B3A'/%3E%3Ctext x='32' y='45' font-size='36' font-weight='700' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E%ED%99%8D%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
   --ground:#F4F6FA; --panel:#FFFFFF; --ink:#101C36; --sub:#56627A; --line:#DCE1EC;
@@ -142,15 +149,118 @@ a.btn.ghost{background:transparent;color:var(--accent)}
 #bMore{margin-top:12px;width:100%}
 footer{padding-block:8px 32px;padding-inline:max(16px,calc((100% - 1320px)/2));font-size:12.5px;color:var(--sub)}
 footer p{margin:4px 0;max-width:90ch}
+
+/* ===== 디자인 2판 (2026-09-19): 아래 규칙이 위의 기본 규칙을 덮어쓴다 ===== */
+:root{--ground:#F3F5F9;--ink:#0E1A33;--sub:#55617A;--line:#DDE2EC;--band:#0B1B3A;--band2:#15305F;--band-ink:#F4F7FD;--band-sub:#B7C3DD;
+  --accent:#2457D6;--accent-ink:#FFFFFF;--accent-soft:#E9EFFC;--field:#F6F8FC;--shadow:0 1px 2px rgba(14,26,51,.05),0 10px 28px rgba(14,26,51,.07)}
+@media (prefers-color-scheme: dark){:root{--ground:#0A111F;--panel:#121B2E;--ink:#E7EBF5;--sub:#9AA6BF;--line:#26314A;--band:#060C19;--band2:#0E1C38;
+  --accent:#8AA9FF;--accent-ink:#0A111F;--accent-soft:#1A2642;--field:#0E1628;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{font:15.5px/1.65 "Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+.band{background:linear-gradient(135deg,var(--band) 0%,var(--band2) 100%);padding-block:0 44px}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding-block:16px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13.5px;color:var(--band-sub)}
+.topbar strong{font-size:16px;color:var(--band-ink);letter-spacing:-.01em}
+.topbar a{margin-left:auto;color:var(--band-ink);text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px;font-weight:700;font-size:13.5px}
+.topbar a:hover{background:rgba(255,255,255,.1)}
+@media (max-width:520px){.topbar .tagline{display:none}}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:40px;align-items:center;padding-top:40px}
+@media (max-width:880px){.hero{grid-template-columns:minmax(0,1fr);gap:24px;padding-top:28px}}
+.eyebrow{margin:0 0 10px!important;font-size:13px!important;font-weight:700;letter-spacing:.02em;color:#9DB6FF!important}
+.band h1{font-size:clamp(26px,4.4vw,40px);line-height:1.25;letter-spacing:-.03em;text-wrap:balance;max-width:16em}
+.band #siteSub{margin-top:14px;font-size:clamp(15px,1.6vw,17px);line-height:1.7;max-width:34em;color:var(--band-sub)}
+.perks{list-style:none;display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 0;padding:0;font-size:14px;color:var(--band-ink)}
+.perks li{display:flex;align-items:center;gap:7px}
+.perks li::before{content:"";width:16px;height:16px;border-radius:50%;background:#2F6BFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8.3l2.4 2.4 5.2-5.4' fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;flex:none}
+.herobtn{display:inline-block;margin-top:24px;padding:14px 26px;border-radius:12px;background:#FFFFFF;color:#0B1B3A;font-weight:800;font-size:16px;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.herobtn:hover{transform:translateY(-1px)}
+.hero-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:20px;color:var(--band-ink);backdrop-filter:blur(6px)}
+.hero-card .hc-title{margin:0 0 10px;font-size:12.5px;font-weight:700;color:var(--band-sub);letter-spacing:.04em}
+.hero-card ul{list-style:none;margin:0;padding:0}
+.hero-card li{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid rgba(255,255,255,.12);font-size:14.5px;font-weight:600}
+.hero-card li:first-child{border-top:0}
+.pill{flex:none;min-width:74px;text-align:center;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
+.pill.high{background:#DDF5EA;color:#0B6B49} .pill.check{background:#FCEFCF;color:#7A5000}
+.hero-card .hc-foot{margin:12px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:13.5px;color:var(--band-sub)}
+.hero-card .hc-foot strong{color:var(--band-ink)}
+@media (max-width:880px){.hero-card{display:none}}
+.wrap{grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:28px;padding-block:28px;margin-top:-20px}
+@media (max-width:880px){.wrap{grid-template-columns:minmax(0,1fr);margin-top:-16px}}
+.panel{border-radius:16px;padding:24px;border-color:transparent;box-shadow:var(--shadow)}
+@media (max-width:520px){.panel{padding:20px 18px}}
+h2{font-size:18px;letter-spacing:-.02em}
+form{gap:16px;margin-top:18px}
+.fld{gap:6px}
+.fld>label,.lbl{font-size:13.5px;font-weight:600;color:var(--ink)}
+.hint{font-size:13px;line-height:1.55}
+input[type=text],input[type=number],input[type=month],input[type=date],input[type=tel],input[type=email],select{min-height:46px;padding:10px 12px;border-radius:10px;font-size:16px;transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover{border-color:#B9C3D8}
+input:focus-visible,select:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--panel)}
+::placeholder{color:#9AA4B8}
+.seg label{min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:600}
+.seg label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.group{gap:14px;padding-top:18px}
+.group>.gt{font-size:15px;letter-spacing:-.01em}
+.checks label{font-size:14.5px;line-height:1.5}
+.checks input{width:17px;height:17px;margin-top:3px;flex:none}
+.stephead{gap:4px;padding-top:20px}
+.steptitle{font-size:17px;letter-spacing:-.02em;display:flex;align-items:center}
+.stepno{width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;margin-right:9px;font-size:13.5px}
+button{border-radius:10px;min-height:44px;transition:transform .08s,box-shadow .15s,background .15s}
+button.primary{min-height:52px;font-size:16.5px;font-weight:800;border-radius:12px;box-shadow:0 6px 16px rgba(36,87,214,.28)}
+button.primary:hover{filter:brightness(1.05)} button.primary:active{transform:translateY(1px);box-shadow:0 3px 8px rgba(36,87,214,.28)}
+button.primary:disabled{box-shadow:none}
+details.more{border-radius:12px;padding:14px 16px}
+.under5,.consent{border-radius:12px}
+.consent label{font-size:14.5px}
+.msg{border-radius:10px;padding:11px 14px}
+.steps{list-style:none;counter-reset:st;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 0;padding:0;color:var(--ink)}
+@media (max-width:720px){.steps{grid-template-columns:minmax(0,1fr)}}
+.steps li{counter-increment:st;display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--field)}
+.steps li::before{content:counter(st);width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:800;margin-bottom:4px}
+.steps li strong{font-size:15px} .steps li span{font-size:13.5px;color:var(--sub);line-height:1.55}
+#teaser .verdict h2,.verdict h2{font-size:20px}
+.badge{padding:6px 14px;font-size:13.5px}
+.tz li{grid-template-columns:88px minmax(0,1fr);padding:13px 0}
+.tz .lv{border-radius:999px;padding:4px 0;font-size:12.5px}
+.tz .nm{font-size:15.5px}
+.money{border-radius:14px;padding:18px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)}
+#teaser .money .primary,#taxPanel .money .primary{min-height:48px;padding-inline:22px}
+@media (max-width:520px){#teaser .money .primary,#taxPanel .money .primary{width:100%!important}}
+.cond li{padding:12px 0}
+.st{border-radius:999px;padding:3px 0}
+.chip{padding:6px 14px;font-size:13.5px;min-height:0;border-radius:999px}
+.notice{padding:14px 0}
+.notice a{font-size:15.5px;line-height:1.5}
+a.btn{border-radius:10px;padding:9px 16px}
+.sumdl{border-radius:12px}
+.lead{font-size:17px;line-height:1.65}
+footer{margin-top:12px;padding-block:28px 40px;border-top:1px solid var(--line);font-size:13px;line-height:1.7}
+footer a{text-decoration:underline;text-underline-offset:3px}
 </style>
 </head>
 <body>
-<div class="band">
-  <p class="firmline"><strong class="firm"></strong><span>세무사가 직접 검토합니다</span><a id="firmTel" hidden></a></p>
-  <h1 id="siteTitle">돌려받을 세금과 지원금, 한 번에 확인</h1>
-  <p id="siteSub">지역, 직원 수, 업종만 넣으면 더 낸 세금을 돌려받을 가능성과 청년일자리도약장려금 해당 여부를 바로 보여 드립니다. 연락처 없이 먼저 확인해 보세요.</p>
-  <p class="trust">빠른 확인 단계에서는 입력한 내용이 어디에도 저장되지 않습니다.</p>
-</div>
+<header class="band">
+  <div class="topbar"><strong class="firm"></strong><span class="tagline">세무사가 직접 검토합니다</span><a id="firmTel" hidden></a></div>
+  <div class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">사업자를 위한 1분 확인</p>
+      <h1 id="siteTitle">돌려받을 세금과 지원금, 한 번에 확인</h1>
+      <p id="siteSub">지역, 직원 수, 업종만 넣으면 더 낸 세금을 돌려받을 가능성과 청년일자리도약장려금 해당 여부를 바로 보여 드립니다.</p>
+      <ul class="perks"><li>연락처 없이 바로 확인</li><li>입력한 내용은 저장되지 않음</li><li>세무사가 직접 검토</li></ul>
+      <a class="herobtn" href="#f">지금 확인하기</a>
+    </div>
+    <div class="hero-card" aria-hidden="true">
+      <p class="hc-title">결과 예시</p>
+      <ul>
+        <li><span class="pill high">가능성 높음</span><span>고용을 늘린 회사의 세액공제</span></li>
+        <li><span class="pill high">가능성 높음</span><span>창업중소기업 세액감면</span></li>
+        <li><span class="pill check">확인 필요</span><span>청년일자리도약장려금</span></li>
+      </ul>
+      <p class="hc-foot">지금 신청할 수 있는 맞춤 공고 <strong>12건</strong></p>
+    </div>
+  </div>
+</header>
 
 <div class="wrap">
   <section class="panel" aria-label="회사 기본자료">
@@ -293,9 +403,9 @@ footer p{margin:4px 0;max-width:90ch}
     <section class="panel" id="intro">
       <h2>이렇게 확인합니다</h2>
       <ol class="steps">
-        <li>지역, 직원 수, 업종을 넣고 <strong>가능성 바로 확인</strong>을 누릅니다. 연락처는 필요 없고 입력한 내용은 저장되지 않습니다.</li>
-        <li>자세한 이유와 예상 금액이 궁금하면 연락처를 남기고 개인정보 수집·이용에 동의합니다.</li>
-        <li>청년일자리도약장려금 요건별 판정, 돌려받을 수 있는 세금이 있는지, 회사 지역·업종에 맞는 공고가 이 자리에 나옵니다.</li>
+        <li><strong>빠른 확인</strong><span>지역, 직원 수, 업종을 넣고 단추를 누릅니다. 연락처는 필요 없습니다.</span></li>
+        <li><strong>자세한 결과</strong><span>연락처를 남기면 항목별 이유와 예상 금액, 맞춤 공고를 바로 봅니다.</span></li>
+        <li><strong>세무사 검토</strong><span>원하시면 상담을 요청하세요. 신고서로 실제 금액을 확인해 드립니다.</span></li>
       </ol>
       <p class="hint" style="margin-top:10px">입력하지 않아도 아래에서 지원금 설명과 지금 신청할 수 있는 지원사업을 둘러볼 수 있습니다.</p>
     </section>
