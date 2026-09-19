@@ -138,7 +138,7 @@ function ksicsOf(c){
 function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
   const wantsExport=(c.needs||[]).includes("수출")||(c.traits||[]).includes(expTrait);
-  const excludes=RULES.notice_excludes||{};
+  const excludes=RULES.notice_excludes||{},local=RULES.local_title||null;
   const today=todayISO(),wanted=(c.needs&&c.needs.length)?c.needs:needsDef.map(n=>n.key);
   const needs=needsDef.filter(n=>wanted.includes(n.key)),sido=c.sido||"",small=isSmallBiz(c);
   const words=(c.industry_text||"").split(/[\s,\/·ㆍ]+/).filter(w=>w.length>=2&&!GENERIC.has(w)),out=[];
@@ -190,6 +190,14 @@ function matchNotices(c,notices,needsDef,limit){
     if(months!==null&&(it.field==="창업"||title.includes("창업"))){
       if(title.includes("예비창업")){score-=3;flags.push("예비창업자 대상일 수 있음")}
       else if(months>=84){score-=3;flags.push("창업 7년이 지나 대상이 아닐 수 있음")}
+    }
+    /* 제목에 [시도] 표시 없이 시·군 이름만 적힌 공고: 회사 시군구와 다르면 감점하고 표시 (다른 지역 사람을 부르는 관광객 유치 사업은 그대로) */
+    if(local&&!(it.sido||[]).length&&!(local.skip_if_title_has||[]).some(w=>title.includes(w))){
+      const lm=/(?:^|\s)([가-힣]{2,4}(?:시|군))(?=\s)/.exec(title.slice(0,30));
+      if(lm&&!(local.skip_names||[]).includes(lm[1])&&!(local.skip_suffix&&lm[1].endsWith(local.skip_suffix))){
+        if((c.sigungu||"").includes(lm[1])){score+=local.bonus||0;const rest=reasons.filter(r=>r!=="지역: 전국");reasons.length=0;reasons.push("지역: "+lm[1],...rest)}
+        else{score-=local.penalty||0;flags.push(lm[1]+" 지역 사업일 수 있음")}
+      }
     }
     /* 공고문에 적힌 제외 대상: 회사 업종이 그 업종이면 감점하고 표시 (예: 체인화 편의점은 프랜차이즈 가맹점 제외 공고에서 빠진다) */
     const ease=it.ease||{};
