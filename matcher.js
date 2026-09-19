@@ -141,10 +141,22 @@ function ksicsOf(c){
   const lst=c.industry_ksic?[c.industry_ksic]:((infoOf(c)||{}).k||[]);
   return lst.map(k=>String(k).replace(/\D/g,"")).filter(k=>k);
 }
+/* 손으로 옮긴 요건 하나를 회사 값과 견준다. true 맞음, false 안 맞음, null 회사 값을 몰라 말하지 않음 */
+function factCheck(ck,c){
+  const t=ck.type,sales=num(c.sales_manwon);
+  if(t==="sales_gt0")return sales===null?null:sales>0;
+  if(t==="sales_lt"||t==="sales_lte"){if(sales===null)return null;let v=ck.vat_included?sales*1.1:sales;
+    if(ck.annualize_year){const fm=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));if(fm&&+fm[1]===ck.annualize_year)v=v/(13-(+fm[2]))*12}   /* 그 해에 개업했으면 월평균을 12개월로 환산 */
+    return t==="sales_lt"?v<ck.manwon:v<=ck.manwon}
+  if(t==="small_biz")return num(c.insured)===null?null:isSmallBiz(c);
+  if(t==="insured_gte"){const n=num(c.insured);return n===null?null:n>=ck.n}
+  if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
+  return null;
+}
 function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
   const wantsExport=(c.needs||[]).includes("수출")||(c.traits||[]).includes(expTrait);
-  const excludes=RULES.notice_excludes||{},local=RULES.local_title||null;
+  const excludes=RULES.notice_excludes||{},local=RULES.local_title||null,facts=RULES.notice_facts||[];
   const today=todayISO(),wanted=(c.needs&&c.needs.length)?c.needs:needsDef.map(n=>n.key);
   const needs=needsDef.filter(n=>wanted.includes(n.key)),sido=c.sido||"",small=isSmallBiz(c);
   const words=(c.industry_text||"").split(/[\s,\/·ㆍ]+/).filter(w=>w.length>=2&&!GENERIC.has(w)),out=[];
@@ -205,6 +217,17 @@ function matchNotices(c,notices,needsDef,limit){
         else{score-=local.penalty||0;flags.push(lm[1]+" 지역 사업일 수 있음")}
       }
     }
+    /* 공고문을 직접 읽고 옮겨 둔 요건(rules/notice_facts.json)이 있는 공고: 회사의 매출, 직원 수, 개업 연월과 맞춰 본다. 모르는 값은 말하지 않는다 */
+    const fact=facts.find(f=>(f.ids||[]).includes(it.id)||((f.title_all||[]).length&&f.title_all.every(w=>title.includes(w))))||null;
+    let factOut=null;
+    if(fact){
+      const passed=[],failed=[],unknown=[];
+      for(const ck of fact.checks||[]){const res=factCheck(ck,c);(res===true?passed:res===false?failed:unknown).push(ck.text)}
+      score+=3*passed.length-8*failed.length;
+      if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
+      if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
+      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown};
+    }
     /* 공고문에 적힌 제외 대상: 회사 업종이 그 업종이면 감점하고 표시 (예: 체인화 편의점은 프랜차이즈 가맹점 제외 공고에서 빠진다) */
     const ease=it.ease||{};
     for(const key of ease.excl||[]){
@@ -215,7 +238,7 @@ function matchNotices(c,notices,needsDef,limit){
     /* 받기 쉬운 순으로 늘어놓을 때 쓰는 값: «대상이 아닐 수 있음» 류 표시가 없는 공고가 먼저, 다음은 받기 쉬운 점수, 같으면 맞는 점수 */
     const caution=flags.some(f=>f.endsWith("수 있음"));
     const easyKey=(caution?0:100000)+Math.trunc(ease.score===undefined?50:ease.score)*100+Math.max(0,Math.min(99,Math.trunc(score)));
-    out.push({id:it.id,ease:it.ease||null,caution,easy_key:easyKey,title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
+    out.push({id:it.id,ease:it.ease||null,caution,easy_key:easyKey,facts:factOut,title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
   }
   out.sort((a,b)=>b.score-a.score||(a.end||"9999").localeCompare(b.end||"9999")||(a.posted||"").localeCompare(b.posted||""));
   return out.slice(0,limit||80);

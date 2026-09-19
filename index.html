@@ -118,6 +118,8 @@ details a{font-weight:500;color:var(--accent);text-decoration:none}
 .tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--info-bg);color:var(--info);margin-right:5px}
 .tag.hot{background:var(--no-bg);color:var(--no)} .tag.good{background:var(--ok-bg);color:var(--ok)}
 .tag.ease-easy{background:var(--ok-bg);color:var(--ok);font-weight:700} .tag.ease-mid{background:var(--warn-bg,#FCF1D6);color:var(--warn,#8A5A00);font-weight:700}
+.facts{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--field);font-size:13.5px}
+.facts ul{margin:6px 0 0;padding-left:18px} .facts details{margin-top:6px} .facts summary{cursor:pointer;color:var(--accent);font-weight:600} .facts p{margin:6px 0 0}
 .tag.ease-hard{background:var(--no-bg);color:var(--no);font-weight:700} .tag.ease-unknown{background:transparent;border:1px solid var(--line);color:var(--sub)}
 .listhead{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
 .empty{color:var(--sub);padding:28px 0;text-align:center;margin:0}
@@ -573,8 +575,16 @@ function render(){
       <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a>
       <div class="s">${n.ease?`<span class="tag ease-${esc(n.ease.level)}">${esc(n.ease.label)}</span><span class="tag">${esc(n.ease.kind_label)}</span>`:""}${n.flags.map(x=>`<span class="tag ${x==="마감 임박"?"hot":""}">${esc(x)}</span>`).join("")}<span class="tag">${esc(n.field)}</span>${esc(n.org||"")} · ${esc(n.period||"")}${n.days_left!==null&&n.days_left>=0?` (D-${n.days_left})`:""}</div>
       ${n.ease&&(n.ease.why||[]).length?`<div class="s">받기: ${esc(n.ease.why.join(" / "))}</div>`:""}
+      ${n.facts?factsHTML(n.facts):""}
       <div class="s">${esc(n.reasons.join(" / "))}</div>${sumHTML(n)}
     </div>`).join("")||'<p class="empty">조건에 맞는 진행 중 공고가 없습니다.</p>';
+}
+/* 공고문을 직접 읽고 옮겨 둔 요건이 있는 공고: 지원 내용과, 입력한 값으로 가려 본 요건을 보여 준다. 가리는 일은 matcher 가 했다 */
+function factsHTML(f){
+  const li=(arr,mark)=>arr.map(x=>`<li>${mark} ${esc(x)}</li>`).join("");
+  return `<div class="facts"><strong>${esc(f.benefit||"")}</strong>
+    <ul>${li(f.passed||[],"맞음:")}${li(f.failed||[],"안 맞음:")}${li(f.unknown||[],"확인할 것:")}</ul>
+    <details><summary>신청 방법과 주의할 점</summary><p>${esc(f.how||"")}</p><ul>${(f.notes||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="hint">${esc(f.verified||"")}</p></details></div>`;
 }
 /* ---------- 세금 환급 가능성과 상담 요청 ---------- */
 function renderTax(){
