@@ -64,7 +64,7 @@ function startupRates(reg,after2026){
 }
 
 function employment(c,T,ksics,reg,reliefs,taxAmt){
-  const E=T.employment,item={key:"employment",title:E.title,level:"check",headline:"",estimate:"",points:[],basis:"조세특례제한법 제29조의7, 제29조의8"};
+  const E=T.employment,item={key:"employment",title:E.title,level:"check",headline:"",estimate:"",points:[],basis:E.basis||"조세특례제한법 제29조의7, 제29조의8"};
   const exs=ksics.map(k=>hit(k,E.excluded_ksic)),allEx=ksics.length>0&&exs.every(x=>x!==null);
   const taken=reliefs.includes("employment")?"yes":(reliefs.includes("none")?"no":"unknown");
   const old=E.periods[0],p=E.periods[E.periods.length-1],r=reg.capital?p.capital:p.non_capital,ro=reg.capital?old.capital:old.non_capital;
@@ -83,7 +83,8 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
     item.points.push("직원이 1명 늘 때마다 "+man(r[0])+"원(청년, 60세 이상, 장애인 등은 "+man(r[1])+"원)을 세금에서 빼 주고, 늘어난 인원을 유지하면 최대 "+E.apply_years+"년간 받습니다 ("+p.years[0]+"~"+p.years[p.years.length-1]+"년 기준)");
     item.points.push(old.years[0]+"~"+old.years[old.years.length-1]+"년에 늘어난 직원은 "+old.name+"로 1명당 "+man(ro[0])+"~"+man(ro[1])+"원이 적용됩니다");
     item.points.push("공제액은 그해 낸 세금 범위 안에서 돌려받고, 남는 금액은 10년간 넘겨서 쓸 수 있습니다");
-    item.points.push("공제액의 20%는 농어촌특별세로 내야 해 실제 혜택은 그만큼 줄어듭니다");
+    (E.period_notes||[]).forEach(x=>item.points.push(x));
+    item.points.push("고용증대, 통합고용 공제액의 20%는 농어촌특별세로 내야 해 실제 혜택은 그만큼 줄어듭니다");
     if(taxAmt!==null&&taxAmt>0&&n*r[0]>taxAmt)item.points.push("작년에 낸 세금이 약 "+man(taxAmt)+"원이라면 한 해에 돌려받는 금액은 그 범위 안입니다");
     if(taken==="unknown")item.points.push("이미 신고에 반영되어 있다면 더 돌려받을 금액은 없습니다. 신고서를 보면 바로 확인됩니다");
     if(exs.some(x=>x!==null))item.points.push("업종 확인 필요: "+exs.find(x=>x!==null)+"은 공제에서 빠집니다");
