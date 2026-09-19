@@ -129,7 +129,15 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
     return item;
   }
   const by=num(c.ceo_birth_year),age=by===null?null:fy-by;
-  const youth=age===null?"unknown":(age<=S.youth_age_max?"yes":(age<=S.youth_age_max+S.military_years_max+1?"maybe":"no"));
+  let youth=age===null?"unknown":(age<=S.youth_age_max?"yes":(age<=S.youth_age_max+S.military_years_max+1?"maybe":"no"));
+  /* 출생연도가 없고 사무실 자료의 나이 표시만 있을 때: le34 = 표시를 만든 해에 만 34세 이하, 35to39 = 만 35~39세.
+     지금 34세 이하면 창업 당시에도 34세 이하다. 35~39세면 창업이 5년 넘게 전일 때만 확실히 청년이고 나머지는 확인이 필요하다 */
+  let usedBand=false;
+  if(age===null&&c.ceo_age_band){
+    const bandYear=num(c.ceo_age_band_year)||fy;
+    if(c.ceo_age_band==="le34"){youth="yes";usedBand=true}
+    else if(c.ceo_age_band==="35to39"){youth=(39-(bandYear-fy)<=S.youth_age_max)?"yes":"maybe";usedBand=true}
+  }
   const rates=startupRates(reg,fy>=2026),sales=num(c.sales_manwon),small=sales!==null&&sales<=S.small_revenue_manwon;
   let rate=null,usedSmall=false;
   if(rates){
@@ -150,6 +158,7 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   if(usedSmall)item.points.push("연 매출 "+man(S.small_revenue_manwon)+"원 이하 창업 특례("+rate+"%)를 적용했습니다. 매출 기준은 연도마다 달라 해마다 따로 확인합니다");
   if(cls.state==="check")item.points.push("업종 확인 필요: "+cls.name);
   if(cls.state==="unknown")item.points.push("종목을 고르면 대상 업종인지 함께 판정합니다");
+  if(usedBand)item.points.push("대표자 나이는 출생연도가 아니라 사무실 자료의 나이 표시(만 "+(c.ceo_age_band==="le34"?"34세 이하":"35~39세")+")로 판정했습니다");
   if(youth==="unknown")item.points.push("대표자 출생연도를 넣으면 청년창업(창업 당시 만 "+S.youth_age_max+"세 이하) 여부를 판정합니다");
   if(youth==="maybe")item.points.push("창업 당시 나이가 기준 근처입니다. 생일이 지났는지와 군 복무 기간(최대 "+S.military_years_max+"년을 나이에서 뺌)에 따라 청년창업 여부가 달라집니다");
   if(youth==="yes"&&c.biz_type==="법인")item.points.push("법인은 청년인 대표자가 최대주주여야 청년창업으로 인정됩니다");

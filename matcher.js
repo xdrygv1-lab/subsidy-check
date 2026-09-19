@@ -138,13 +138,15 @@ function matchNotices(c,notices,needsDef,limit){
     if(!isOpen(it,today)||!sameSido(sido,it.sido))continue;
     const st=sigunguState(c,it.sigungu);if(st==="other")continue;
     const title=it.title,tags=it.tags||[],body=(it.summary||"")+" "+tags.join(" ");
-    let score=0;const reasons=[],hit=[];
+    let score=0;const reasons=[],hit=[],needScores=[];
     for(const nd of needs){
       let s=nd.fields.includes(it.field)?3:0;
       const kt=nd.keywords.filter(k=>title.includes(k)),kb=nd.keywords.filter(k=>!kt.includes(k)&&body.includes(k));
       s+=2*Math.min(kt.length,2)+Math.min(kb.length,2);
-      if(s>=2){score+=s;hit.push(nd.label);if(kt.length||kb.length)reasons.push("키워드: "+kt.concat(kb).slice(0,3).join(", "))}
+      if(s>=2){needScores.push(s);hit.push(nd.label);if(kt.length||kb.length)reasons.push("키워드: "+kt.concat(kb).slice(0,3).join(", "))}
     }
+    /* 관심 분야를 고르지 않았으면 가장 높은 한 분야만 친다. 전부 더하면 여러 분야에 걸친 통합 공고가 누구에게나 맨 위로 온다 */
+    if(needScores.length)score+=(c.needs&&c.needs.length)?needScores.reduce((a,b)=>a+b,0):Math.max(...needScores);
     /* 회사 특성(청년·여성 대표, 인증, 수출 등)에 맞는 우대 공고 */
     const traitHit=[];let traitTitle=false;
     for(const t of TRAITS){
@@ -166,6 +168,12 @@ function matchNotices(c,notices,needsDef,limit){
     if(title.includes("소상공인")||tags.includes("소상공인")){
       if(small){score+=1;flags.push("소상공인 대상")}
       else if(title.includes("소상공인")){score-=3;flags.push("소상공인 전용일 수 있음")}
+    }
+    /* 창업 공고: 창업기업은 사업 개시 후 7년이 지나지 않은 기업 (중소기업창업 지원법 제2조 제3호) */
+    const months=monthsSince(c.founded);
+    if(months!==null&&(it.field==="창업"||title.includes("창업"))){
+      if(title.includes("예비창업")){score-=3;flags.push("예비창업자 대상일 수 있음")}
+      else if(months>=84){score-=3;flags.push("창업 7년이 지나 대상이 아닐 수 있음")}
     }
     let dl=null;if(it.end){dl=daysLeft(it.end);if(dl<=7)flags.push("마감 임박")}
     out.push({title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
