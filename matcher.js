@@ -130,7 +130,14 @@ function evalYouthLeap(prog,c,notices){
 }
 const EVALUATORS={"youth-leap-2026":evalYouthLeap};
 
+/* 회사의 표준산업분류 코드 목록: 고른 종목의 코드가 있으면 그것, 없으면 업종코드로 조회 */
+function ksicsOf(c){
+  const lst=c.industry_ksic?[c.industry_ksic]:((infoOf(c)||{}).k||[]);
+  return lst.map(k=>String(k).replace(/\D/g,"")).filter(k=>k);
+}
 function matchNotices(c,notices,needsDef,limit){
+  const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
+  const wantsExport=(c.needs||[]).includes("수출")||(c.traits||[]).includes(expTrait);
   const today=todayISO(),wanted=(c.needs&&c.needs.length)?c.needs:needsDef.map(n=>n.key);
   const needs=needsDef.filter(n=>wanted.includes(n.key)),sido=c.sido||"",small=isSmallBiz(c);
   const words=(c.industry_text||"").split(/[\s,\/·ㆍ]+/).filter(w=>w.length>=2&&!GENERIC.has(w)),out=[];
@@ -169,6 +176,14 @@ function matchNotices(c,notices,needsDef,limit){
       if(small){score+=1;flags.push("소상공인 대상")}
       else if(title.includes("소상공인")){score-=3;flags.push("소상공인 전용일 수 있음")}
     }
+    /* 업종을 이름에 밝힌 공고: 회사 업종을 아는데 그 업종이 아니면 감점, 그 업종이면 가점 */
+    const named=sectors.filter(sc=>sc.keywords.some(k=>title.includes(k)));
+    if(named.length&&ksics.length){
+      if(named.some(sc=>sc.ksic.some(px=>ksics.some(k=>k.startsWith(px))))){score+=2;reasons.push("업종: "+named[0].name)}
+      else{score-=4;flags.push(named[0].name+" 업종 대상일 수 있음")}
+    }
+    /* 수출·해외 공고: 수출 관심도 수출 특성도 없는 회사에는 감점 */
+    if(!wantsExport&&(it.field==="수출"||expKw.some(k=>title.includes(k)))){score-=4;flags.push("수출 기업 대상일 수 있음")}
     /* 창업 공고: 창업기업은 사업 개시 후 7년이 지나지 않은 기업 (중소기업창업 지원법 제2조 제3호) */
     const months=monthsSince(c.founded);
     if(months!==null&&(it.field==="창업"||title.includes("창업"))){
