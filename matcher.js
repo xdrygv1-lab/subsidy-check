@@ -148,7 +148,20 @@ function factCheck(ck,c){
   if(t==="sales_lt"||t==="sales_lte"){if(sales===null)return null;let v=ck.vat_included?sales*1.1:sales;
     if(ck.annualize_year){const fm=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));if(fm&&+fm[1]===ck.annualize_year)v=v/(13-(+fm[2]))*12}   /* 그 해에 개업했으면 월평균을 12개월로 환산 */
     return t==="sales_lt"?v<ck.manwon:v<=ck.manwon}
-  if(t==="small_biz")return num(c.insured)===null?null:isSmallBiz(c);
+  if(t==="small_biz"){
+    let n=num(c.insured);if(n===null)return null;
+    if(ck.exclude_hired_since){const cnt=(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length;n-=ck.exclude_max?Math.min(cnt,ck.exclude_max):cnt}   /* 공고문이 «지원 대상 새 직원은 상시근로자 수에서 뺀다» 고 한 경우. 지원 대상이 되는 수까지만 뺀다 */
+    return n<(SMALL10.has(sectionOf(c))?10:5);
+  }
+  if(t==="hired_since"){   /* 그 날짜(부터 until 까지)에 새로 뽑아 지금도 일하는 직원이 있는가. hire_dates_on 이 없으면 입력한 채용일 1건으로 보고, 그것도 없으면 모름 */
+    const until=ck.until||"9999-12-31",inRange=x=>ck.date<=String(x)&&String(x)<=until;
+    if(c.hire_dates_on===undefined||c.hire_dates_on===null){
+      const d=String(c.hire_date||"");
+      if(c.hire_plan==="최근3개월"&&/^\d{4}-\d{2}-\d{2}$/.test(d))return inRange(d)?true:null;
+      return null;
+    }
+    return c.hire_dates_on.some(inRange);
+  }
   if(t==="insured_gte"){const n=num(c.insured);return n===null?null:n>=ck.n}
   if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
   return null;
@@ -221,12 +234,16 @@ function matchNotices(c,notices,needsDef,limit){
     const fact=facts.find(f=>(f.ids||[]).includes(it.id)||((f.title_all||[]).length&&f.title_all.every(w=>title.includes(w))))||null;
     let factOut=null;
     if(fact){
-      const passed=[],failed=[],unknown=[];
-      for(const ck of fact.checks||[]){const res=factCheck(ck,c);(res===true?passed:res===false?failed:unknown).push(ck.text)}
+      const passed=[],failed=[],unknown=[],todo=[];
+      for(const ck of fact.checks||[]){
+        const res=factCheck(ck,c);
+        if(res===false&&ck.soft)todo.push(ck.soft_text||ck.text);   /* 안 맞아도 탈락이 아닌 요건(예: 올해 새로 뽑은 직원): 감점 없이 «하면 받을 수 있는 것» 으로 둔다 */
+        else (res===true?passed:res===false?failed:unknown).push(ck.text);
+      }
       score+=3*passed.length-8*failed.length;
       if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
       if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
-      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown};
+      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo};
     }
     /* 공고문에 적힌 제외 대상: 회사 업종이 그 업종이면 감점하고 표시 (예: 체인화 편의점은 프랜차이즈 가맹점 제외 공고에서 빠진다) */
     const ease=it.ease||{};

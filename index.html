@@ -583,7 +583,7 @@ function render(){
 function factsHTML(f){
   const li=(arr,mark)=>arr.map(x=>`<li>${mark} ${esc(x)}</li>`).join("");
   return `<div class="facts"><strong>${esc(f.benefit||"")}</strong>
-    <ul>${li(f.passed||[],"맞음:")}${li(f.failed||[],"안 맞음:")}${li(f.unknown||[],"확인할 것:")}</ul>
+    <ul>${li(f.passed||[],"맞음:")}${li(f.failed||[],"안 맞음:")}${li(f.todo||[],"이렇게 하면:")}${li(f.unknown||[],"확인할 것:")}</ul>
     <details><summary>신청 방법과 주의할 점</summary><p>${esc(f.how||"")}</p><ul>${(f.notes||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="hint">${esc(f.verified||"")}</p></details></div>`;
 }
 /* ---------- 세금 환급 가능성과 상담 요청 ---------- */
