@@ -4,6 +4,7 @@
 "use strict";
 const RULES=window.RULES||{programs:[],needs:[]}, DATA=window.BIZINFO_DATA||{items:[],count:0,collected_at:null};
 const SMALL10=new Set(["B","C","F","H"]), EXCLUDED_WORDS=["유흥","단란","무도","사행","카지노"], INDIRECT_WORDS=["인력공급","파견","경비","경호","시설관리"];
+const TRAITS=RULES.traits||[];
 const IND=window.INDUSTRY||{groups:[],by_code:{}};      // 국세청 업종코드-표준산업분류 연계표 (industry.js)
 const GENERIC=new Set(["개발","서비스","판매","기타","관련","일반","지원","사업"]);
 const won=n=>Math.round(n).toLocaleString("ko-KR");
@@ -21,6 +22,12 @@ function monthsSince(ym){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(ym||""));
 const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(sectionOf(c))?10:5);
 const sameSido=(s,list)=>!list||!list.length||list.includes(s);
 function sigunguState(c,list){if(!list||!list.length)return "match";const where=((c.sigungu||"")+" "+(c.address||"")).trim();if(!where)return "unknown";return list.some(s=>where.includes(s))?"match":"other"}
+/* 날짜(YYYY-MM-DD)에 개월 수를 더한다. 말일을 넘으면 그 달 말일로 맞춘다 */
+function addMonths(iso,months){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));if(!m)return null;
+  const y=+m[1],mo=+m[2]-1+months,d=+m[3],ty=y+Math.floor(mo/12),tm=((mo%12)+12)%12,last=new Date(Date.UTC(ty,tm+1,0)).getUTCDate();
+  return ty+"-"+String(tm+1).padStart(2,"0")+"-"+String(Math.min(d,last)).padStart(2,"0");
+}
 const isOpen=(it,today)=>!it.end||it.end>=today;
 
 function evalYouthLeap(prog,c,notices){
@@ -65,17 +72,33 @@ function evalYouthLeap(prog,c,notices){
   else if(capital&&c.hire_hard==="no")add("hire","fail","수도권은 취업애로청년 채용만 지원");
   else{
     hireReady=true;const msgs=[];
-    if(plan==="최근3개월")msgs.push(`이미 채용했다면 채용일로부터 ${p.hire_before_apply_months}개월 안에 참여 신청해야 함`);
-    if(capital&&c.hire_hard!=="yes"){msgs.push("수도권은 취업애로청년 요건(10개 중 1개) 확인 필요");add("hire","check",msgs.join(". "))}
+    const limit=plan==="최근3개월"?addMonths(c.hire_date,p.hire_before_apply_months):null;
+    if(limit){
+      const left=daysLeft(limit);
+      if(left<0){hireReady=false;add("hire","fail",`채용일(${c.hire_date})로부터 ${p.hire_before_apply_months}개월이 지나 이 채용 건은 참여 신청 기한(${limit})이 끝남`)}
+      else msgs.push(`참여 신청 기한은 ${limit} (D-${left}). 채용일로부터 ${p.hire_before_apply_months}개월 안에 신청해야 함`);
+    }else if(plan==="최근3개월")msgs.push(`이미 채용했다면 채용일로부터 ${p.hire_before_apply_months}개월 안에 참여 신청해야 함`);
+    else if(c.hire_date)msgs.push(`채용 예정일 ${c.hire_date}. 그 전에 참여 신청을 해 두어야 함`);
+    if(!hireReady){}
+    else if(capital&&c.hire_hard!=="yes"){msgs.push("수도권은 취업애로청년 요건(10개 중 1개) 확인 필요");add("hire","check",msgs.join(". "))}
     else add("hire","pass",msgs.join(". ")||"청년 정규직 채용 예정");
   }
-  add("work","info",`주 ${p.weekly_hours_min}시간 이상, 평균 월 급여 ${p.avg_monthly_pay_max_manwon}만원 이하, 고용보험 가입`);
+  const pay=num(c.hire_pay_manwon),hours=num(c.hire_hours),workBase=`주 ${p.weekly_hours_min}시간 이상, 평균 월 급여 ${p.avg_monthly_pay_max_manwon}만원 이하, 고용보험 가입`;
+  if(plan==="없음"||(pay===null&&hours===null))add("work","info",workBase);
+  else{
+    const bad=[];
+    if(pay!==null&&pay>p.avg_monthly_pay_max_manwon)bad.push(`월 급여 ${won(pay)}만원이 기준 ${p.avg_monthly_pay_max_manwon}만원을 넘음`);
+    if(hours!==null&&hours<p.weekly_hours_min)bad.push(`주 ${hours}시간은 기준 ${p.weekly_hours_min}시간에 못 미침`);
+    if(bad.length)add("work","fail",bad.join(". "));
+    else if(pay!==null&&hours!==null)add("work","pass",`월 급여 ${won(pay)}만원, 주 ${hours}시간으로 조건 충족 (입력 기준)`);
+    else add("work","info",workBase);
+  }
   add("layoff",flags.layoff?"fail":"pass",flags.layoff?"최근 고용조정 이직이 있는 것으로 입력됨. 해당 기간 채용자는 지원 제외":"고용조정 이직 없음 (입력 기준)");
   add("arrears",flags.arrears?"fail":"pass",flags.arrears?"임금체불 명단공개 등 제외 사유로 입력됨":"제외 사유 없음 (입력 기준)");
 
   const companyKeys=["insured","priority","sales","industry","layoff","arrears"];
   const companyFail=results.some(r=>companyKeys.includes(r.key)&&r.status==="fail");
-  const hireFail=results.some(r=>r.key==="hire"&&r.status==="fail");
+  const hireFail=results.some(r=>(r.key==="hire"||r.key==="work")&&r.status==="fail");
   const checks=results.filter(r=>r.status==="check"&&(r.key!=="hire"||hireReady));
   let verdict,level;
   if(companyFail){verdict="대상 아님";level="no"}
@@ -122,7 +145,16 @@ function matchNotices(c,notices,needsDef,limit){
       s+=2*Math.min(kt.length,2)+Math.min(kb.length,2);
       if(s>=2){score+=s;hit.push(nd.label);if(kt.length||kb.length)reasons.push("키워드: "+kt.concat(kb).slice(0,3).join(", "))}
     }
-    if(!hit.length)continue;
+    /* 회사 특성(청년·여성 대표, 인증, 수출 등)에 맞는 우대 공고 */
+    const traitHit=[];let traitTitle=false;
+    for(const t of TRAITS){
+      if(!(c.traits||[]).includes(t.label))continue;
+      if(t.keywords.some(k=>title.includes(k))){score+=3;traitTitle=true;traitHit.push(t.label)}
+      else if(t.keywords.some(k=>body.includes(k))){score+=1;traitHit.push(t.label)}
+    }
+    if(!hit.length&&!traitTitle)continue;
+    if(!hit.length)hit.push("우대 조건");
+    if(traitHit.length)reasons.push("우대: "+[...new Set(traitHit)].slice(0,2).join(", "));
     const hasSg=it.sigungu&&it.sigungu.length;
     if(it.sido&&it.sido.length){
       score+=1;if(hasSg&&st==="match")score+=2;

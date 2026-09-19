@@ -8,7 +8,7 @@ window.SITE_CONFIG = {
   FIRM_CONTACT: "",                 // 예: "02-000-0000 / help@example.com" (개인정보 문의처로 동의문에 표시)
 
   // 동의문에 들어가는 값
-  CONSENT_VERSION: "2026-09-19",
+  CONSENT_VERSION: "2026-09-19-2",   // 수집 항목에 회사 특성, 채용일·급여·근로시간을 추가한 판
   RETENTION: "수집일로부터 1년",      // 필수 동의 항목의 보유·이용 기간
   MARKETING_RETENTION: "수신 동의 철회 시까지 (최대 수집일로부터 1년)",
 

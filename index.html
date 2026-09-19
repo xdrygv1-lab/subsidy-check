@@ -37,7 +37,7 @@ form{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
 .fld>label,.lbl{font-size:13px;color:var(--sub);font-weight:500}
 .req::after{content:" *";color:var(--no)}
-input[type=text],input[type=number],input[type=month],input[type=tel],input[type=email],select{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
+input[type=text],input[type=number],input[type=month],input[type=date],input[type=tel],input[type=email],select{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
 input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -158,10 +158,10 @@ footer p{margin:4px 0;max-width:90ch}
       <div class="group"><span class="gt">업종과 매출</span>
         <div class="two">
           <div class="fld"><label for="upte">업태</label><select id="upte"></select></div>
-          <div class="fld"><label for="jmSearch">종목 찾기</label><input type="text" id="jmSearch" placeholder="예: 커피, 소프트웨어" maxlength="20" disabled></div>
+          <div class="fld"><label for="jmSearch">종목 찾기</label><input type="text" id="jmSearch" placeholder="업태를 몰라도 됩니다 (예: 커피)" maxlength="20"></div>
         </div>
-        <div class="fld"><label for="jongmok">종목</label><select id="jongmok" disabled><option value="">업태를 먼저 고르세요</option></select></div>
-        <div class="fld"><label for="industry_code">국세청 업종코드 (자동 입력)</label><input type="text" id="industry_code" placeholder="종목을 고르면 자동으로 들어갑니다" inputmode="numeric" maxlength="6">
+        <div class="fld"><label for="jongmok">종목</label><select id="jongmok" disabled></select></div>
+        <div class="fld"><label for="industry_code">국세청 업종코드</label><input type="text" id="industry_code" placeholder="종목을 고르면 자동으로 들어갑니다" inputmode="numeric" maxlength="6">
           <p class="hint" id="codeHint">사업자등록증의 업태와 종목을 고르면 됩니다. 코드는 몰라도 괜찮습니다.</p></div>
         <div class="two">
           <div class="fld"><label for="sales_manwon"><span class="req">직전연도 연 매출액 (만원)</span><span class="amt" id="salesText"></span></label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
@@ -181,6 +181,11 @@ footer p{margin:4px 0;max-width:90ch}
             <label><input type="checkbox" id="hire_youth" checked>만 15~34세 청년</label>
             <label><input type="checkbox" id="hire_regular" checked>정규직</label>
           </div>
+          <div class="two">
+            <div class="fld"><label for="hire_date">채용일 (예정일)</label><input type="date" id="hire_date" name="hire_date"></div>
+            <div class="fld"><label for="hire_pay_manwon">월 급여 (만원)</label><input type="number" id="hire_pay_manwon" name="hire_pay_manwon" min="0" placeholder="예: 280"></div>
+          </div>
+          <div class="fld"><label for="hire_hours">주 근로시간</label><input type="number" id="hire_hours" name="hire_hours" min="0" max="80" placeholder="예: 40"></div>
           <div class="fld"><label for="hire_hard">취업애로청년 여부 (수도권만 해당)</label>
             <select id="hire_hard"><option value="unknown">모름</option><option value="yes">해당</option><option value="no">해당 없음</option></select></div>
         </div>
@@ -193,6 +198,11 @@ footer p{margin:4px 0;max-width:90ch}
           <label><input type="checkbox" id="layoff">최근 권고사직 등 고용조정 이직이 있음</label>
           <label><input type="checkbox" id="arrears">임금체불 명단공개 등 제외 사유가 있음</label>
         </div>
+      </div>
+
+      <div class="group"><span class="gt">회사 특성 (해당하는 것만 체크)</span>
+        <div class="checks one" id="traits"></div>
+        <p class="hint">체크한 항목에 맞는 우대 공고를 함께 찾아 줍니다.</p>
       </div>
 
       <div class="group"><span class="gt">필요한 지원</span>
@@ -215,7 +225,7 @@ footer p{margin:4px 0;max-width:90ch}
           <details><summary>내용 보기</summary>
             <table>
               <tr><th>수집·이용 목적</th><td>지원금 해당 여부 확인 결과 제공, 결과에 대한 문의 응대, 서비스 시험 운영과 개선</td></tr>
-              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 필요한 지원, 담당자 성명, 연락처, 이메일</td></tr>
+              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 채용일·월 급여·주 근로시간(입력한 경우), 회사 특성(대표자 청년·여성 여부, 보유 인증, 수출 여부 등 체크한 항목), 필요한 지원, 담당자 성명, 연락처, 이메일</td></tr>
               <tr><th>보유·이용 기간</th><td><strong id="retention"></strong>. 기간이 지나거나 삭제를 요청하면 지체 없이 파기합니다.</td></tr>
               <tr><th>보관 위치</th><td>수집한 정보는 <span class="firm"></span>이(가) 관리하는 Google Drive(Google LLC의 클라우드, 국외 서버 포함)에 보관됩니다.</td></tr>
               <tr><th>동의 거부</th><td>동의를 거부할 수 있습니다. 거부하면 결과 확인 서비스를 이용할 수 없습니다.</td></tr>
@@ -292,6 +302,7 @@ footer p{margin:4px 0;max-width:90ch}
 <script src="data.js"></script>
 <script src="industry.js"></script>
 <script src="matcher.js"></script>
+<script src="formkit.js"></script>
 <script>
 (function(){
 "use strict";
@@ -306,80 +317,34 @@ let unlocked=!CFG.REQUIRE_CONSENT_TO_VIEW,lastResult=null,needFilter=null,timer=
 
 function readCompany(){
   return {name:val("name"),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
-    industry_code:val("industry_code"),industry_text:industryText(),industry_hint:industryHint(),sales_manwon:val("sales_manwon"),founded:val("founded"),
+    ...INDUI.fields(),sales_manwon:val("sales_manwon"),founded:val("founded"),
+    hire_date:val("hire_date"),hire_pay_manwon:val("hire_pay_manwon"),hire_hours:val("hire_hours"),traits:TR.read(),
     hire_plan:val("hire_plan"),hire_count:val("hire_count"),hire_youth:$("#hire_youth").checked,hire_regular:$("#hire_regular").checked,hire_hard:val("hire_hard"),
-    flags:Object.assign({mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked},readExceptions()),
+    flags:Object.assign({mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked},U5.read()),
     needs:[...document.querySelectorAll("#needs input:checked")].map(i=>i.value)};
 }
-/* ---------- 업태·종목 드롭다운: 국세청 업종코드표의 대분류(업태)와 세세분류(종목). 종목을 고르면 업종코드가 자동으로 들어간다 ---------- */
-const GROUPS=(M.INDUSTRY||{}).groups||[];
-const groupOf=()=>GROUPS.find(x=>x.upte===val("upte"))||null;
-function currentItem(){const g=groupOf(),i=val("jongmok");return {g,it:g&&i!==""?g.items[+i]:null}}
-function industryText(){const {g,it}=currentItem();return g?(g.upte+(it?" / "+it.n:"")):""}
-function industryHint(){
-  const {g,it}=currentItem();if(!g)return {};
-  const typed=val("industry_code");
-  if(it&&typed&&typed!==it.c)return {};                 // 코드를 직접 고쳤으면 그 코드로 다시 조회한다
-  return it?{section:g.section,f:it.f||""}:{section:g.section};
-}
-function fillJongmok(){
-  const g=groupOf(),sel=$("#jongmok"),q=val("jmSearch"),keep=sel.value;
-  if(!g){sel.innerHTML='<option value="">업태를 먼저 고르세요</option>';return}
-  const byMid=new Map();
-  g.items.forEach((x,i)=>{if(q&&!(x.n+" "+(x.d||"")+" "+x.c).includes(q))return;if(!byMid.has(x.m))byMid.set(x.m,[]);byMid.get(x.m).push([i,x])});
-  let n=0;const html=[...byMid].map(([mid,list])=>`<optgroup label="${esc(mid)}">${list.map(([i,x])=>{n++;return `<option value="${i}">${esc(x.n)}${x.d?" · "+esc(x.d):""} (${esc(x.c)})</option>`}).join("")}</optgroup>`).join("");
-  sel.innerHTML=`<option value="">${n?`종목 선택 (${n}개)`:"찾는 종목이 없습니다"}</option>`+html;
-  if(keep!==""&&sel.querySelector(`option[value="${keep}"]`))sel.value=keep;
-}
-function onUpte(){
-  const g=groupOf();
-  $("#jongmok").disabled=!g;$("#jmSearch").disabled=!g;$("#jmSearch").value="";$("#jongmok").value="";
-  fillJongmok();$("#industry_code").value="";onJongmok();
+/* ---------- 입력 도우미 (formkit.js): 업태·종목 드롭다운, 5인 미만 선택, 회사 특성 ---------- */
+const FK=window.FormKit,PROG0=RULES.programs[0]||{};
+const INDUI=FK.initIndustry((M.INDUSTRY||{}).groups||[],(M.INDUSTRY||{}).year_label,()=>{
+  const g=INDUI.item().g;
   if(g&&g.browse&&!bIndTouched){bInd=g.browse;bShown=30;renderBrowse()}      // 고른 업태를 둘러보기에도 반영
-}
-function onJongmok(){
-  const {it}=currentItem(),code=$("#industry_code"),hint=$("#codeHint");
-  if(it){code.value=it.c;hint.textContent="국세청 업종코드표("+((M.INDUSTRY||{}).year_label||"최신")+")에서 자동으로 넣었습니다. 사업자등록증과 다르면 고쳐 주세요."}
-  else hint.textContent="사업자등록증의 업태와 종목을 고르면 됩니다. 코드는 몰라도 괜찮습니다.";
-}
-
-/* ---------- 5인 미만 예외: 하나 이상 고르거나 "해당 없음"을 고른다 ---------- */
-const NONE=(RULES.programs[0]||{}).under5_none_label||"해당 없음";
-function renderExceptions(){
-  const list=(RULES.programs[0]||{}).under5_exceptions||[];
-  $("#exceptions").innerHTML=list.map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.short||e.key)}">${esc(e.label)}</label>`).join("")
-    +`<label><input type="checkbox" id="exc_none" value="${esc(NONE)}">${esc(NONE)}</label>`;
-}
-function onExceptionChange(e){
-  const t=e.target;if(!t||t.type!=="checkbox")return;
-  if(t.id==="exc_none"&&t.checked)document.querySelectorAll("#exceptions input").forEach(i=>{if(i!==t)i.checked=false});
-  else if(t.checked)$("#exc_none").checked=false;
-}
-function readExceptions(){
-  if($("#excBox").hidden)return {exceptions:[],exceptions_none:false};
-  return {exceptions:[...document.querySelectorAll("#exceptions input:checked")].map(i=>i.value),exceptions_none:$("#exc_none").checked};
-}
-/* 고른 종목이 지식서비스산업이면 그 칸을 자동으로 체크해 준다 */
-function syncKnowledge(){
-  const box=$("#exc_knowledge");if(!box||$("#excBox").hidden)return;
-  const isK=String((industryHint().f)||"").includes("K");
-  if(isK&&!box.checked){box.checked=true;$("#exc_none").checked=false}
-  $("#excHint").textContent=isK?"고른 종목이 지식서비스산업에 해당해 자동으로 체크했습니다. 다른 항목도 해당하면 함께 고르세요."
-    :'5명 미만 회사는 아래에 해당할 때만 지원 대상입니다. 해당하는 것이 없으면 "해당 없음"을 고르세요.';
-}
-function showSalesText(){$("#salesText").textContent=M.moneyText($("#sales_manwon").value)}
+  U5.sync();
+});
+const U5=FK.initUnder5(PROG0.under5_exceptions||[],PROG0.under5_none_label||"해당 없음",()=>INDUI.hint().f);
+const TR=FK.initTraits(RULES.traits||[]);
+function showSalesText(){$("#salesText").textContent=FK.moneyText($("#sales_manwon").value)}
 
 function toggle(){
   $("#hireMore").hidden=$("#hire_plan").value==="없음";
-  const n=parseFloat($("#insured").value);$("#excBox").hidden=!(n>0&&n<5);
-  syncKnowledge();showSalesText();
+  const n=parseFloat($("#insured").value);U5.setVisible(n>0&&n<5);
+  U5.sync();showSalesText();
 }
 function showFormMsg(text,focusId){const m=$("#formMsg");m.textContent=text;m.hidden=!text;if(focusId)$("#"+focusId).focus()}
 function validate(){
   if(!val("name"))return showFormMsg("회사명을 입력해 주세요.","name"),false;
   if(!val("sido"))return showFormMsg("사업장 주소의 시도를 선택해 주세요.","sido"),false;
   if(val("insured")==="")return showFormMsg("4대보험 가입자 수를 입력해 주세요. 없으면 0을 넣습니다.","insured"),false;
-  if(!$("#excBox").hidden&&!document.querySelector("#exceptions input:checked"))return showFormMsg("직원이 5명 미만이면 해당하는 항목을 골라 주세요. 없으면 \"해당 없음\"을 고릅니다.","exc_none"),false;
+  if(U5.visible()&&!U5.anyChecked())return showFormMsg("직원이 5명 미만이면 해당하는 항목을 골라 주세요. 없으면 \"해당 없음\"을 고릅니다.","exc_none"),false;
   if(val("sales_manwon")==="")return showFormMsg("직전연도 연 매출액을 입력해 주세요. 매출이 없었으면 0을 넣습니다.","sales_manwon"),false;
   if(!val("contact_name"))return showFormMsg("담당자 성명을 입력해 주세요.","contact_name"),false;
   if(!M.validPhone(val("contact_phone")))return showFormMsg("연락처를 다시 확인해 주세요. 예: 010-1234-5678","contact_phone"),false;
@@ -486,6 +451,7 @@ function buildSubmission(c,r){
     result:{program:p.name||"",verdict:p.verdict||"",estimate_manwon:p.estimate?p.estimate.company_manwon:"",
       checks:(p.conditions||[]).filter(x=>x.status==="check"||x.status==="fail").map(x=>ST[x.status]+": "+x.label),
       matched:r.notices.length,top:r.notices.slice(0,5).map(n=>n.title)},
+    extra_text:[c.traits.length?"특성: "+c.traits.join(", "):"",c.hire_date?"채용일: "+c.hire_date:"",c.hire_pay_manwon?"월 급여: "+c.hire_pay_manwon+"만원":"",c.hire_hours?"주 "+c.hire_hours+"시간":""].filter(Boolean).join(" | "),
     data_collected_at:DATA.collected_at||""};
 }
 async function send(payload){
@@ -520,10 +486,8 @@ document.querySelectorAll(".firm").forEach(e=>e.textContent=CFG.FIRM_NAME||"");
 $("#firmContact").textContent=CFG.FIRM_CONTACT?" (문의: "+CFG.FIRM_CONTACT+")":"";
 $("#retention").textContent=CFG.RETENTION||"";$("#mretention").textContent=CFG.MARKETING_RETENTION||"";
 $("#sido").innerHTML='<option value="">시도 선택</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
-$("#upte").innerHTML='<option value="">업태 선택</option>'+GROUPS.map(g=>`<option>${esc(g.upte)}</option>`).join("");
 $("#bSido").innerHTML='<option value="">지역 전체</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
 $("#needs").innerHTML=RULES.needs.map(n=>`<label><input type="checkbox" id="need_${esc(n.key)}" value="${esc(n.key)}">${esc(n.label)}</label>`).join("");
-renderExceptions();
 $("#dataMeta").textContent=DATA.count?`기업마당 진행 공고 ${won(DATA.count)}건 기준 (${DATA.collected_at} 수집)`:"";
 if(!CFG.REQUIRE_CONSENT_TO_VIEW)$("#submit").textContent="동의하고 제출";
 $("#f").addEventListener("input",()=>{
@@ -534,13 +498,9 @@ $("#filters").addEventListener("click",e=>{const b=e.target.closest("[data-need]
 $("#bCats").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(b){bCat=b.dataset.cat;bShown=30;renderBrowse()}});
 $("#bInds").addEventListener("click",e=>{const b=e.target.closest("[data-ind]");if(b){bIndTouched=true;bInd=b.dataset.ind||null;bShown=30;renderBrowse()}});
 $("#bNational").addEventListener("change",()=>{bShown=30;renderBrowse()});
-$("#upte").addEventListener("change",onUpte);
-$("#jongmok").addEventListener("change",onJongmok);
-$("#jmSearch").addEventListener("input",()=>{fillJongmok();onJongmok()});
 $("#bSido").addEventListener("change",()=>{bSidoTouched=true;bShown=30;renderBrowse()});
 $("#bSearch").addEventListener("input",()=>{bShown=30;renderBrowse()});
 $("#bMore").addEventListener("click",()=>{bShown+=30;renderBrowse()});
-$("#exceptions").addEventListener("change",onExceptionChange);
 $("#contact_phone").addEventListener("input",e=>{e.target.value=M.formatPhone(e.target.value)});
 $("#submit").addEventListener("click",onSubmit);
 toggle();renderEasy();renderBrowse();
