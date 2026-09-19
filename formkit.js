@@ -166,7 +166,7 @@ function formatBizNo(v){
   return d.slice(0,3)+"-"+d.slice(3,5)+"-"+d.slice(5);
 }
 function validBizNo(v){
-  const d=String(v||"").replace(/\D/g,"");if(!d)return true;if(d.length!==10)return false;
+  const d=String(v||"").replace(/\D/g,"");if(!d)return true;if(d.length!==10||new Set(d).size===1)return false;   // 0000000000 같은 자리표시값은 검증식을 그냥 통과하므로 따로 막는다
   const w=[1,3,7,1,3,7,1,3,5];let s=0;for(let i=0;i<9;i++)s+=(+d[i])*w[i];
   s+=Math.floor((+d[8])*5/10);
   return (10-s%10)%10===+d[9];
