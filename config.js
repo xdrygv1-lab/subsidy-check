@@ -1,0 +1,17 @@
+/* 공개 웹페이지 설정. 값만 바꾸면 화면과 동의문에 바로 반영된다. */
+window.SITE_CONFIG = {
+  // 구글 Apps Script 웹 앱 주소 (구글드라이브_연결방법.md 참고). 비어 있으면 제출 내용이 저장되지 않는 시험 모드로 동작한다.
+  SUBMIT_URL: "",
+
+  SITE_TITLE: "우리 회사 지원금 확인",
+  FIRM_NAME: "세무회계홍인",
+  FIRM_CONTACT: "",                 // 예: "02-000-0000 / help@example.com" (개인정보 문의처로 동의문에 표시)
+
+  // 동의문에 들어가는 값
+  CONSENT_VERSION: "2026-09-19",
+  RETENTION: "수집일로부터 1년",      // 필수 동의 항목의 보유·이용 기간
+  MARKETING_RETENTION: "수신 동의 철회 시까지 (최대 수집일로부터 1년)",
+
+  // true: 필수 동의 후 제출해야 결과가 보인다. false: 결과는 바로 보이고 제출은 선택.
+  REQUIRE_CONSENT_TO_VIEW: true
+};

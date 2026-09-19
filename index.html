@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>우리 회사 지원금 확인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#F4F6FA; --panel:#FFFFFF; --ink:#101C36; --sub:#56627A; --line:#DCE1EC;
+  --band:#0F1F3D; --band-ink:#F2F5FB; --band-sub:#A9B6D3;
+  --accent:#2B5BD7; --accent-ink:#FFFFFF; --field:#F7F8FB;
+  --ok:#0B7A53; --ok-bg:#E3F4EC; --no:#B42318; --no-bg:#FCE9E6; --warn:#8A5A00; --warn-bg:#FCF1D6; --info:#42506B; --info-bg:#EAEEF6;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0B1220; --panel:#131C30; --ink:#E6EAF4; --sub:#98A4BC; --line:#26314A;
+    --band:#070D1B; --band-ink:#E6EAF4; --band-sub:#8F9DBB;
+    --accent:#86A6FF; --accent-ink:#0B1220; --field:#0F1729;
+    --ok:#63D6A5; --ok-bg:#10342A; --no:#FF9489; --no-bg:#3B1A17; --warn:#F1C56C; --warn-bg:#382D10; --info:#B7C1D6; --info-bg:#1E2940;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}
+.band{background:var(--band);color:var(--band-ink);padding-block:26px;padding-inline:max(16px,calc((100% - 1320px)/2))}
+.band h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em}
+.band p{margin:6px 0 0;font-size:14px;color:var(--band-sub);max-width:60ch}
+.wrap{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start;padding-block:24px;padding-inline:max(16px,calc((100% - 1320px)/2))}
+@media (max-width:880px){.wrap{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+.results{display:flex;flex-direction:column;gap:24px;min-width:0}
+h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+form{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld>label,.lbl{font-size:13px;color:var(--sub);font-weight:500}
+.req::after{content:" *";color:var(--no)}
+input[type=text],input[type=number],input[type=month],input[type=tel],input[type=email],select{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.seg label{padding:9px;border:1px solid var(--line);border-radius:7px;text-align:center;cursor:pointer;background:var(--field)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border-color:var(--accent);color:var(--accent);font-weight:700;background:var(--panel)}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:1px}
+.group{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.group>.gt{font-size:14px;font-weight:700}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px}
+.checks.one{grid-template-columns:minmax(0,1fr)}
+.checks label{display:flex;gap:7px;align-items:flex-start;font-size:14px;cursor:pointer}
+.checks input{margin-top:5px;accent-color:var(--accent)}
+.hint{font-size:12.5px;color:var(--sub);margin:0}
+.consent{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--field);display:flex;flex-direction:column;gap:8px}
+.consent label{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:700;cursor:pointer}
+.consent input{margin-top:5px;accent-color:var(--accent)}
+.consent details{border:0;margin:0;padding:0}
+.consent summary{font-size:13px;font-weight:500;color:var(--accent)}
+.consent table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.consent th,.consent td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.consent th{width:88px;color:var(--sub);font-weight:500;background:var(--panel)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+button{font:inherit;padding:11px 16px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;width:100%}
+button:disabled{opacity:.55;cursor:default}
+.msg{font-size:13.5px;padding:9px 12px;border-radius:7px;margin:0}
+.msg.err{background:var(--no-bg);color:var(--no)} .msg.ok{background:var(--ok-bg);color:var(--ok)} .msg.warn{background:var(--warn-bg);color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:4px 12px;border-radius:999px;font-size:13px;background:var(--field)}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:700;background:var(--panel)}
+.verdict{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.verdict h2{font-size:19px}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.badge.yes{background:var(--ok-bg);color:var(--ok)} .badge.no{background:var(--no-bg);color:var(--no)} .badge.maybe{background:var(--warn-bg);color:var(--warn)}
+.money{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--info-bg)}
+.money strong{font-size:22px;letter-spacing:-.01em}
+.cond{list-style:none;margin:14px 0 0;padding:0}
+.cond li{display:grid;grid-template-columns:68px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.st{font-size:12px;font-weight:700;border-radius:5px;text-align:center;padding:2px 0;align-self:start}
+.st.pass{background:var(--ok-bg);color:var(--ok)} .st.fail{background:var(--no-bg);color:var(--no)} .st.check{background:var(--warn-bg);color:var(--warn)} .st.info{background:var(--info-bg);color:var(--info)}
+.cond .t{font-weight:700} .cond .m{font-size:14px} .cond .d{font-size:12.5px;color:var(--sub)}
+details{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+summary{cursor:pointer;font-weight:700;font-size:14px}
+details ul{margin:8px 0 0;padding-left:18px;font-size:13.5px;color:var(--sub)}
+.notice{padding:12px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.notice:first-child{border-top:0}
+.notice a{color:var(--ink);font-weight:700;text-decoration:none}
+details a{font-weight:500;color:var(--accent);text-decoration:none}
+.notice a:hover,details a:hover{color:var(--accent);text-decoration:underline}
+.notice .s{font-size:13px;color:var(--sub);margin-top:3px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--info-bg);color:var(--info);margin-right:5px}
+.tag.hot{background:var(--no-bg);color:var(--no)} .tag.good{background:var(--ok-bg);color:var(--ok)}
+.listhead{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.empty{color:var(--sub);padding:28px 0;text-align:center;margin:0}
+.steps{margin:10px 0 0;padding-left:20px;color:var(--sub);font-size:14px}
+footer{padding-block:8px 32px;padding-inline:max(16px,calc((100% - 1320px)/2));font-size:12.5px;color:var(--sub)}
+footer p{margin:4px 0;max-width:90ch}
+</style>
+</head>
+<body>
+<div class="band">
+  <h1 id="siteTitle">우리 회사 지원금 확인</h1>
+  <p id="siteSub">회사 기본자료를 넣으면 청년일자리도약장려금 해당 여부와 지금 신청할 수 있는 지원사업 공고를 바로 확인할 수 있습니다.</p>
+</div>
+
+<div class="wrap">
+  <section class="panel" aria-label="회사 기본자료">
+    <h2>회사 기본자료</h2>
+    <form id="f" autocomplete="on" novalidate>
+      <div class="fld"><label for="name" class="req">회사명</label><input type="text" id="name" name="organization" maxlength="60"></div>
+      <div class="fld"><span class="lbl">사업자 구분</span>
+        <div class="seg">
+          <label><input type="radio" id="bizP" name="biz_type" value="개인" checked>개인</label>
+          <label><input type="radio" id="bizC" name="biz_type" value="법인">법인</label>
+        </div>
+      </div>
+      <div class="fld"><label for="sido" class="req">사업장 주소</label>
+        <div class="two"><select id="sido"></select><input type="text" id="sigungu" placeholder="시군구 (예: 수원시 영통구)" aria-label="시군구" maxlength="30"></div>
+      </div>
+      <div class="fld"><label for="insured" class="req">4대보험(고용보험) 가입자 수</label><input type="number" id="insured" min="0" max="100000" placeholder="대표자 제외, 최근 1년 평균"></div>
+
+      <div class="group"><span class="gt">업종</span>
+        <div class="fld"><label for="section">업종 대분류</label><select id="section"></select></div>
+        <div class="two">
+          <div class="fld"><label for="ksic_code">업종코드 (선택)</label><input type="text" id="ksic_code" placeholder="표준산업분류 5자리" inputmode="numeric" maxlength="6"></div>
+          <div class="fld"><label for="industry_text">업태·종목</label><input type="text" id="industry_text" placeholder="예: 소프트웨어 개발" maxlength="60"></div>
+        </div>
+        <div class="two">
+          <div class="fld"><label for="sales_manwon">연 매출액 (만원, 선택)</label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
+          <div class="fld"><label for="founded">개업 연월 (선택)</label><input type="month" id="founded"></div>
+        </div>
+      </div>
+
+      <div class="group"><span class="gt">신규 채용</span>
+        <div class="two">
+          <div class="fld"><label for="hire_plan">채용 계획</label>
+            <select id="hire_plan"><option value="없음">없음</option><option value="예정">채용 예정</option><option value="최근3개월">최근 3개월 안에 채용함</option></select></div>
+          <div class="fld"><label for="hire_count">인원</label><input type="number" id="hire_count" min="0" max="1000" placeholder="명"></div>
+        </div>
+        <div id="hireMore" style="display:contents">
+          <div class="checks">
+            <label><input type="checkbox" id="hire_youth" checked>만 15~34세 청년</label>
+            <label><input type="checkbox" id="hire_regular" checked>정규직</label>
+          </div>
+          <div class="fld"><label for="hire_hard">취업애로청년 여부 (수도권만 해당)</label>
+            <select id="hire_hard"><option value="unknown">모름</option><option value="yes">해당</option><option value="no">해당 없음</option></select></div>
+        </div>
+      </div>
+
+      <div class="group" id="excBox"><span class="gt">5인 미만 예외 (해당 시 선택)</span>
+        <div class="checks one" id="exceptions"></div>
+        <p class="hint">지식서비스산업은 업종코드를 넣으면 자동으로 판정합니다.</p>
+      </div>
+
+      <div class="group"><span class="gt">기타 확인</span>
+        <div class="checks one">
+          <label><input type="checkbox" id="mid_size_in_complex">비수도권 산업단지에 입주한 중견기업</label>
+          <label><input type="checkbox" id="layoff">최근 권고사직 등 고용조정 이직이 있음</label>
+          <label><input type="checkbox" id="arrears">임금체불 명단공개 등 제외 사유가 있음</label>
+        </div>
+      </div>
+
+      <div class="group"><span class="gt">필요한 지원</span>
+        <div class="checks" id="needs"></div>
+        <p class="hint">아무것도 고르지 않으면 전체를 보여줍니다.</p>
+      </div>
+
+      <div class="group"><span class="gt">담당자</span>
+        <div class="two">
+          <div class="fld"><label for="contact_name" class="req">성명</label><input type="text" id="contact_name" name="name" autocomplete="name" maxlength="30"></div>
+          <div class="fld"><label for="contact_phone" class="req">연락처</label><input type="tel" id="contact_phone" name="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="20"></div>
+        </div>
+        <div class="fld"><label for="contact_email">이메일 (선택)</label><input type="email" id="contact_email" name="email" autocomplete="email" maxlength="80"></div>
+        <div class="hp" aria-hidden="true"><label for="website">비워 두세요</label><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
+      </div>
+
+      <div class="group"><span class="gt">개인정보 동의</span>
+        <div class="consent">
+          <label><input type="checkbox" id="consent_required">[필수] 개인정보 수집·이용에 동의합니다</label>
+          <details><summary>내용 보기</summary>
+            <table>
+              <tr><th>수집·이용 목적</th><td>지원금 해당 여부 확인 결과 제공, 결과에 대한 문의 응대, 서비스 시험 운영과 개선</td></tr>
+              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 필요한 지원, 담당자 성명, 연락처, 이메일(입력한 경우)</td></tr>
+              <tr><th>보유·이용 기간</th><td><strong id="retention"></strong>. 기간이 지나거나 삭제를 요청하면 지체 없이 파기합니다.</td></tr>
+              <tr><th>보관 위치</th><td>수집한 정보는 <span class="firm"></span>이(가) 관리하는 Google Drive(Google LLC의 클라우드, 국외 서버 포함)에 보관됩니다.</td></tr>
+              <tr><th>동의 거부</th><td>동의를 거부할 수 있습니다. 거부하면 결과 확인 서비스를 이용할 수 없습니다.</td></tr>
+            </table>
+          </details>
+        </div>
+        <div class="consent">
+          <label><input type="checkbox" id="consent_marketing">[선택] 새 지원사업 안내 연락을 받겠습니다</label>
+          <details><summary>내용 보기</summary>
+            <table>
+              <tr><th>목적</th><td>회사에 맞는 새 지원사업 공고와 신청 안내를 전화, 문자, 이메일로 제공</td></tr>
+              <tr><th>항목</th><td>회사명, 담당자 성명, 연락처, 이메일</td></tr>
+              <tr><th>보유·이용 기간</th><td><strong id="mretention"></strong></td></tr>
+              <tr><th>동의 거부</th><td>동의하지 않아도 결과 확인에는 아무 제한이 없습니다.</td></tr>
+            </table>
+          </details>
+        </div>
+        <p class="hint">개인정보처리자: <span class="firm"></span><span id="firmContact"></span></p>
+      </div>
+
+      <p class="msg err" id="formMsg" role="alert" hidden></p>
+      <button type="button" class="primary" id="submit">동의하고 결과 확인</button>
+    </form>
+  </section>
+
+  <div class="results">
+    <section class="panel" id="intro">
+      <h2>이렇게 확인합니다</h2>
+      <ol class="steps">
+        <li>왼쪽에 회사 기본자료와 담당자 정보를 입력합니다.</li>
+        <li>개인정보 수집·이용에 동의하고 버튼을 누릅니다.</li>
+        <li>청년일자리도약장려금 요건별 판정과 회사 지역·업종에 맞는 기업마당 공고가 이 자리에 나옵니다.</li>
+      </ol>
+      <p class="hint" id="dataMeta" style="margin-top:12px"></p>
+    </section>
+    <p class="msg" id="sendMsg" role="status" hidden></p>
+    <div id="programs"></div>
+    <section class="panel" id="noticePanel" aria-label="기업마당 공고 매칭" hidden>
+      <div class="listhead">
+        <h2 id="nTitle">기업마당 공고 매칭</h2>
+        <div class="chips" id="filters"></div>
+      </div>
+      <div id="notices"></div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <p>공고 자료 출처: 기업마당(bizinfo.go.kr). 판정은 공고문의 기본요건만으로 본 1차 선별이며, 최종 자격은 사업운영 지침과 관할 운영기관 심사로 확정됩니다.</p>
+  <p><span class="firm"></span></p>
+</footer>
+
+<script src="config.js"></script>
+<script src="rules.js"></script>
+<script src="data.js"></script>
+<script src="matcher.js"></script>
+<script>
+(function(){
+"use strict";
+const CFG=window.SITE_CONFIG||{}, M=window.Matcher, RULES=M.RULES, DATA=M.DATA, won=M.won;
+const SIDO=["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원","충북","충남","전북","전남","경북","경남","제주"];
+const SECTIONS={A:"농업, 임업 및 어업",B:"광업",C:"제조업",D:"전기, 가스, 증기 및 공기 조절 공급업",E:"수도, 하수 및 폐기물 처리, 원료 재생업",F:"건설업",G:"도매 및 소매업",H:"운수 및 창고업",I:"숙박 및 음식점업",J:"정보통신업",K:"금융 및 보험업",L:"부동산업",M:"전문, 과학 및 기술 서비스업",N:"사업시설 관리, 사업 지원 및 임대 서비스업",P:"교육 서비스업",Q:"보건업 및 사회복지 서비스업",R:"예술, 스포츠 및 여가관련 서비스업",S:"협회 및 단체, 수리 및 기타 개인 서비스업"};
+const ST={pass:"충족",fail:"미충족",check:"확인 필요",info:"참고"};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const val=id=>($("#"+id).value||"").trim();
+let unlocked=!CFG.REQUIRE_CONSENT_TO_VIEW,lastResult=null,needFilter=null,timer=null,sending=false;
+
+function readCompany(){
+  return {name:val("name"),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
+    ksic_section:val("section"),ksic_code:val("ksic_code"),industry_text:val("industry_text"),sales_manwon:val("sales_manwon"),founded:val("founded"),
+    hire_plan:val("hire_plan"),hire_count:val("hire_count"),hire_youth:$("#hire_youth").checked,hire_regular:$("#hire_regular").checked,hire_hard:val("hire_hard"),
+    flags:{mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked,
+      exceptions:[...document.querySelectorAll("#exceptions input:checked")].map(i=>i.value)},
+    needs:[...document.querySelectorAll("#needs input:checked")].map(i=>i.value)};
+}
+function toggle(){
+  $("#hireMore").hidden=$("#hire_plan").value==="없음";
+  const n=parseFloat($("#insured").value);$("#excBox").hidden=!(n>0&&n<5);
+}
+function showFormMsg(text,focusId){const m=$("#formMsg");m.textContent=text;m.hidden=!text;if(focusId)$("#"+focusId).focus()}
+function validate(){
+  if(!val("name"))return showFormMsg("회사명을 입력해 주세요.","name"),false;
+  if(!val("sido"))return showFormMsg("사업장 주소의 시도를 선택해 주세요.","sido"),false;
+  if(val("insured")==="")return showFormMsg("4대보험 가입자 수를 입력해 주세요. 없으면 0을 넣습니다.","insured"),false;
+  if(!val("contact_name"))return showFormMsg("담당자 성명을 입력해 주세요.","contact_name"),false;
+  if(val("contact_phone").replace(/\D/g,"").length<9)return showFormMsg("연락처를 정확히 입력해 주세요.","contact_phone"),false;
+  const em=val("contact_email");if(em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))return showFormMsg("이메일 형식을 확인해 주세요.","contact_email"),false;
+  if(!$("#consent_required").checked)return showFormMsg("[필수] 개인정보 수집·이용에 동의해야 결과를 확인할 수 있습니다.","consent_required"),false;
+  showFormMsg("");return true;
+}
+function run(){
+  if(!unlocked)return;
+  const c=readCompany();if(!c.sido||c.insured==="")return;
+  lastResult=M.evaluate(c);render();
+}
+function render(){
+  const r=lastResult;$("#intro").hidden=true;$("#noticePanel").hidden=false;
+  $("#programs").innerHTML=r.programs.map(p=>`
+    <section class="panel">
+      <div class="verdict"><h2>${esc(p.name)}</h2><span class="badge ${p.level}">${esc(p.verdict)}</span></div>
+      <p class="hint" style="margin-top:4px">${esc(p.ministry)} · ${esc(p.type.key)} 유형 · ${esc(p.type.who)}</p>
+      ${p.estimate?`<div class="money">예상 기업 지원금 <strong>최대 ${won(p.estimate.company_manwon)}만원</strong> (청년 ${p.estimate.heads}명 기준)<p class="hint">${esc(p.estimate.note)}</p>${p.estimate.youth_note?`<p class="hint">${esc(p.estimate.youth_note)}</p>`:""}</div>`:""}
+      <ul class="cond">${p.conditions.map(c=>`<li><span class="st ${c.status}">${ST[c.status]}</span><div><div class="t">${esc(c.label)}</div><div class="m">${esc(c.message)}</div><div class="d">${esc(c.detail)}</div></div></li>`).join("")}</ul>
+      <details ${p.related.length?"open":""}><summary>관할 운영기관 공고 ${p.related.length}건</summary>
+        ${p.related.map(n=>`<div class="notice"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="s"><span class="tag ${n.scope==="관할 일치"?"good":""}">${esc(n.scope)}</span>${esc(n.agency||"")} · ${esc(n.period||"")}${n.contact?" · "+esc(n.contact):""}</div></div>`).join("")||'<p class="hint" style="margin-top:8px">현재 기업마당에 이 지역 운영기관 공고가 없습니다. 고용24에서 운영기관을 직접 검색하세요.</p>'}
+      </details>
+      ${p.hard.length?`<details><summary>취업애로청년 요건 (1개 이상 해당)</summary><ul>${p.hard.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></details>`:""}
+      <details><summary>지원 제외 청년</summary><ul>${p.excludedYouth.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></details>
+      <details><summary>지원 내용과 신청 방법</summary><ul><li>${esc(p.type.youth)}</li><li>${esc(p.type.benefit)}</li><li>${esc(p.apply)}</li></ul></details>
+      <details><summary>근거 공고</summary><ul>${p.sources.map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></li>`).join("")}</ul><p class="hint" style="margin-top:8px">${esc(p.caution)}</p></details>
+    </section>`).join("");
+  const labels=[...new Set(r.notices.flatMap(n=>n.needs))];
+  if(needFilter&&!labels.includes(needFilter))needFilter=null;
+  $("#filters").innerHTML=labels.length>1?[`<button type="button" class="chip" aria-pressed="${!needFilter}" data-need="">전체</button>`].concat(labels.map(l=>`<button type="button" class="chip" aria-pressed="${needFilter===l}" data-need="${esc(l)}">${esc(l)}</button>`)).join(""):"";
+  const list=r.notices.filter(n=>!needFilter||n.needs.includes(needFilter));
+  $("#nTitle").textContent=`기업마당 공고 매칭 ${list.length}건`;
+  $("#notices").innerHTML=list.map(n=>`<div class="notice">
+      <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a>
+      <div class="s">${n.flags.map(x=>`<span class="tag ${x==="마감 임박"?"hot":""}">${esc(x)}</span>`).join("")}<span class="tag">${esc(n.field)}</span>${esc(n.org||"")} · ${esc(n.period||"")}${n.days_left!==null&&n.days_left>=0?` (D-${n.days_left})`:""}</div>
+      <div class="s">${esc(n.reasons.join(" / "))}</div>
+    </div>`).join("")||'<p class="empty">조건에 맞는 진행 중 공고가 없습니다.</p>';
+}
+
+/* ---------- 제출: 구글 Apps Script 웹 앱으로 보내면 구글 드라이브의 시트와 백업 폴더에 저장된다 ---------- */
+function buildSubmission(c,r){
+  const p=r.programs[0]||{};
+  return {submission_id:"s_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),submitted_at:new Date().toISOString(),
+    page:location.origin+location.pathname,consent_version:CFG.CONSENT_VERSION||"",consent_required:true,consent_marketing:$("#consent_marketing").checked,
+    company:c,contact:{name:val("contact_name"),phone:val("contact_phone"),email:val("contact_email")},
+    result:{program:p.name||"",verdict:p.verdict||"",estimate_manwon:p.estimate?p.estimate.company_manwon:"",
+      checks:(p.conditions||[]).filter(x=>x.status==="check"||x.status==="fail").map(x=>ST[x.status]+": "+x.label),
+      matched:r.notices.length,top:r.notices.slice(0,5).map(n=>n.title)},
+    data_collected_at:DATA.collected_at||""};
+}
+async function send(payload){
+  const body=JSON.stringify(payload);
+  try{
+    const res=await fetch(CFG.SUBMIT_URL,{method:"POST",body,headers:{"Content-Type":"text/plain;charset=utf-8"},redirect:"follow"});
+    const j=await res.json().catch(()=>({ok:res.ok}));return !!j.ok;
+  }catch(e){
+    // 응답을 읽지 못하는 환경이면 확인 없이 한 번 더 보낸다. 같은 제출 ID 는 저장 쪽에서 한 번만 기록한다.
+    try{await fetch(CFG.SUBMIT_URL,{method:"POST",body,mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"}});return true}catch(e2){return false}
+  }
+}
+async function onSubmit(){
+  if(sending||!validate())return;
+  if(val("website")){unlocked=true;run();return}           // 자동 입력 프로그램은 저장하지 않는다
+  const c=readCompany(),r=M.evaluate(c),msg=$("#sendMsg"),btn=$("#submit");
+  if(!CFG.SUBMIT_URL){
+    unlocked=true;lastResult=r;render();msg.className="msg warn";msg.textContent="시험 모드입니다. 저장소가 아직 연결되지 않아 입력 내용은 어디에도 저장되지 않았습니다.";msg.hidden=false;return;
+  }
+  sending=true;btn.disabled=true;btn.textContent="확인하는 중";
+  const ok=await send(buildSubmission(c,r));
+  sending=false;btn.disabled=false;btn.textContent="수정한 내용으로 다시 확인";
+  if(!ok){msg.className="msg err";msg.textContent="제출하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.";msg.hidden=false;return}
+  unlocked=true;lastResult=r;render();
+  msg.className="msg ok";msg.textContent="제출되었습니다. 아래에서 결과를 확인하세요. 입력값을 바꾸면 결과가 바로 바뀝니다.";msg.hidden=false;
+  $("#programs").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+}
+
+/* ---------- 시작 ---------- */
+document.title=CFG.SITE_TITLE||document.title;$("#siteTitle").textContent=CFG.SITE_TITLE||$("#siteTitle").textContent;
+document.querySelectorAll(".firm").forEach(e=>e.textContent=CFG.FIRM_NAME||"");
+$("#firmContact").textContent=CFG.FIRM_CONTACT?" (문의: "+CFG.FIRM_CONTACT+")":"";
+$("#retention").textContent=CFG.RETENTION||"";$("#mretention").textContent=CFG.MARKETING_RETENTION||"";
+$("#sido").innerHTML='<option value="">시도 선택</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
+$("#section").innerHTML='<option value="">선택</option>'+Object.keys(SECTIONS).map(k=>`<option value="${k}">${k}. ${SECTIONS[k]}</option>`).join("");
+$("#needs").innerHTML=RULES.needs.map(n=>`<label><input type="checkbox" id="need_${esc(n.key)}" value="${esc(n.key)}">${esc(n.label)}</label>`).join("");
+$("#exceptions").innerHTML=((RULES.programs[0]||{}).under5_exceptions||[]).filter(e=>!e.auto).map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.key)}">${esc(e.label)}</label>`).join("");
+$("#dataMeta").textContent=DATA.count?`기업마당 진행 공고 ${won(DATA.count)}건 기준 (${DATA.collected_at} 수집)`:"";
+if(!CFG.REQUIRE_CONSENT_TO_VIEW)$("#submit").textContent="동의하고 제출";
+$("#f").addEventListener("input",()=>{toggle();clearTimeout(timer);timer=setTimeout(run,250)});
+$("#filters").addEventListener("click",e=>{const b=e.target.closest("[data-need]");if(b){needFilter=b.dataset.need||null;render()}});
+$("#submit").addEventListener("click",onSubmit);
+toggle();
+})();
+</script>
+</body>
+</html>
