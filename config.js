@@ -23,6 +23,11 @@ window.SITE_CONFIG = {
   POLICY_SINCE: "",
   POLICY_FINAL: false,
 
+  // 거래처용 알림 수신 동의·설문 화면(survey.html). CONSENT_URL 이 비어 있으면 시안 모드라 아무 데도 보내지 않는다.
+  // 대표님이 질문과 동의문을 승인하고 받는 곳이 준비된 뒤에만 채운다.
+  CONSENT_URL: "",
+  SURVEY_CONSENT_VERSION: "draft-2026-09-19",
+
   // true: 필수 동의 후 제출해야 결과가 보인다. false: 결과는 바로 보이고 제출은 선택.
   REQUIRE_CONSENT_TO_VIEW: true
 };

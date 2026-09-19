@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1B3A">
+<title>지원금 알림 받기</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--ground:#F3F5F9;--panel:#FFFFFF;--ink:#0E1A33;--sub:#55617A;--line:#DDE2EC;--band:#0B1B3A;--band2:#15305F;--band-ink:#F4F7FD;--band-sub:#B7C3DD;
+  --accent:#2457D6;--accent-ink:#FFFFFF;--accent-soft:#E9EFFC;--field:#F6F8FC;--no:#B42318;--no-bg:#FCE9E6;--ok:#0B7A53;--ok-bg:#E3F4EC;--warn:#8A5A00;--warn-bg:#FCF1D6;
+  --shadow:0 1px 2px rgba(14,26,51,.05),0 10px 28px rgba(14,26,51,.07)}
+@media (prefers-color-scheme: dark){:root{--ground:#0A111F;--panel:#121B2E;--ink:#E7EBF5;--sub:#9AA6BF;--line:#26314A;--band:#060C19;--band2:#0E1C38;--accent:#8AA9FF;--accent-ink:#0A111F;--accent-soft:#1A2642;--field:#0E1628;
+  --no:#FF9489;--no-bg:#3B1A17;--ok:#63D6A5;--ok-bg:#10342A;--warn:#F1C56C;--warn-bg:#382D10;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font:15.5px/1.65 "Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+.band{background:linear-gradient(135deg,var(--band) 0%,var(--band2) 100%);color:var(--band-ink);padding-block:22px 40px;padding-inline:max(16px,calc((100% - 640px)/2))}
+.band .firm{font-weight:800;font-size:15px}
+.band h1{margin:14px 0 0;font-size:clamp(23px,5.2vw,30px);line-height:1.3;letter-spacing:-.03em;text-wrap:balance}
+.band p{margin:10px 0 0;color:var(--band-sub);font-size:15px}
+main{padding-inline:max(16px,calc((100% - 640px)/2));margin-top:-18px;padding-bottom:40px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--panel);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+.draft{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:11px 14px;font-size:13.5px;margin:0}
+.q{display:flex;flex-direction:column;gap:10px;padding-top:20px;margin-top:20px;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.qt{font-weight:800;font-size:16.5px;letter-spacing:-.02em;display:flex;gap:9px;align-items:flex-start}
+.qn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;justify-content:center;font-size:13.5px}
+.hint{font-size:13px;color:var(--sub);margin:0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{display:inline-flex;align-items:center;min-height:44px;padding:8px 15px;border:1px solid var(--line);border-radius:999px;background:var(--field);cursor:pointer;font-size:14.5px;font-weight:600}
+.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts label:has(input:checked){background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.opts label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+input[type=number],input[type=date],input[type=tel],input[type=email]{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:inherit;font-size:16px}
+input:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:480px){.two{grid-template-columns:minmax(0,1fr)}}
+.fld{display:flex;flex-direction:column;gap:5px} .fld>label{font-size:13.5px;font-weight:600}
+.consent{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--field);display:flex;flex-direction:column;gap:8px}
+.consent>label{display:flex;gap:9px;align-items:flex-start;font-weight:700;font-size:14.5px;cursor:pointer}
+.consent input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--accent)}
+.consent details summary{font-size:13px;color:var(--accent);cursor:pointer;font-weight:600}
+.consent table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.consent th,.consent td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.consent th{width:84px;color:var(--sub);font-weight:500;background:var(--panel)}
+button.primary{width:100%;min-height:54px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:inherit;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(36,87,214,.28)}
+button.primary:disabled{opacity:.55;box-shadow:none}
+.msg{font-size:14px;padding:11px 14px;border-radius:10px;margin:0}
+.msg.err{background:var(--no-bg);color:var(--no)} .msg.ok{background:var(--ok-bg);color:var(--ok)} .msg.warn{background:var(--warn-bg);color:var(--warn)}
+footer{font-size:12.5px;color:var(--sub);text-align:center}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<header class="band">
+  <span class="firm"></span>
+  <h1>우리 회사에 맞는 지원금이 나오면 먼저 알려 드립니다</h1>
+  <p>1분이면 끝납니다. 고르기만 하면 됩니다. 사무실이 이미 아는 내용은 묻지 않습니다.</p>
+</header>
+<main>
+  <p class="draft" id="draftNote">시안입니다. 대표님 확인 전이라 지금은 제출해도 어디에도 저장되지 않습니다.</p>
+  <form class="card" id="f" novalidate>
+    <div class="q"><div class="qt"><span class="qn">1</span><span>어떤 소식을 받고 싶으세요?</span></div>
+      <p class="hint">여러 개 골라도 됩니다.</p><div class="opts" id="needs"></div></div>
+
+    <div class="q"><div class="qt"><span class="qn">2</span><span>앞으로 직원을 뽑을 계획이 있으세요?</span></div>
+      <div class="opts" id="hire_plan"></div>
+      <div class="opts" id="hireMore" hidden>
+        <label><input type="checkbox" id="hire_youth">만 15~34세 청년을 뽑을 수도 있다</label>
+        <label><input type="checkbox" id="hire_regular">정규직으로 뽑는다</label></div></div>
+
+    <div class="q"><div class="qt"><span class="qn">3</span><span>최근 3개월 안에 새로 뽑은 직원이 있으세요?</span></div>
+      <p class="hint">청년일자리도약장려금은 채용 후 3개월 안에 신청해야 해서 여쭙니다.</p>
+      <div class="opts" id="recent"></div>
+      <div class="fld" id="hireDateBox" hidden><label for="hire_date">채용한 날</label><input type="date" id="hire_date"></div></div>
+
+    <div class="q"><div class="qt"><span class="qn">4</span><span>지금 4대보험에 가입된 직원은 몇 명인가요?</span></div>
+      <p class="hint">대표자는 빼고 적어 주세요. 없으면 0.</p>
+      <input type="number" id="insured" min="0" max="100000" inputmode="numeric" placeholder="명"></div>
+
+    <div class="q"><div class="qt"><span class="qn">5</span><span>회사가 가지고 있는 것에 표시해 주세요</span></div>
+      <p class="hint">없으면 건너뛰어도 됩니다.</p><div class="opts" id="certs"></div></div>
+
+    <div class="q"><div class="qt"><span class="qn">6</span><span>어떻게 받으시겠어요?</span></div>
+      <div class="opts" id="how"></div>
+      <div class="two">
+        <div class="fld"><label for="phone_confirm">받을 휴대폰 번호</label><input type="tel" id="phone_confirm" placeholder="사무실에 등록된 번호와 다를 때만" maxlength="20" autocomplete="tel"></div>
+        <div class="fld"><label for="email_confirm">받을 이메일</label><input type="email" id="email_confirm" placeholder="사무실에 등록된 주소와 다를 때만" maxlength="80" autocomplete="email"></div>
+      </div></div>
+
+    <div class="q"><div class="qt"><span class="qn">7</span><span>얼마나 자주 받으시겠어요?</span></div>
+      <div class="opts" id="freq"></div></div>
+
+    <div class="q">
+      <div class="consent"><label><input type="checkbox" id="consent_privacy">[필수] 개인정보 수집·이용에 동의합니다</label>
+        <details><summary>내용 보기</summary><table>
+          <tr><th>목적</th><td>회사에 맞는 지원사업을 찾아 알려 드리기 위해</td></tr>
+          <tr><th>항목</th><td>위 설문에 답한 내용, 알림을 받을 연락처</td></tr>
+          <tr><th>보유 기간</th><td>알림 수신을 그만두실 때까지. 그만두시면 지체 없이 지웁니다. 세무대리 계약에 따라 따로 보관하는 자료는 그 계약에 따릅니다.</td></tr>
+          <tr><th>동의 거부</th><td>동의하지 않으셔도 세무대리 서비스에는 아무 영향이 없습니다. 다만 지원금 알림은 받으실 수 없습니다.</td></tr></table></details></div>
+      <div class="consent"><label><input type="checkbox" id="consent_ad">[알림을 받으려면 필수] <span class="firm"></span>이 보내는 지원금·정책자금·세금 환급 안내(광고성 정보)를 받는 데 동의합니다</label>
+        <details><summary>내용 보기</summary><table>
+          <tr><th>받는 방법</th><td>위 6번에서 고른 방법으로만 보냅니다.</td></tr>
+          <tr><th>보내는 곳</th><td><span class="firm"></span> <span id="firmTel"></span></td></tr>
+          <tr><th>보내는 시간</th><td>오후 9시부터 다음 날 오전 8시 사이에는 보내지 않습니다.</td></tr>
+          <tr><th>그만 받기</th><td>문자와 카카오톡은 안내에 적힌 수신거부 번호로, 이메일은 맨 아래 수신거부를 누르면 바로 중단됩니다. 2년마다 계속 받으실지 다시 여쭙니다.</td></tr></table></details></div>
+      <p class="msg err" id="msg" role="alert" hidden></p>
+      <button type="button" class="primary" id="send">동의하고 알림 받기</button>
+    </div>
+  </form>
+  <footer><span class="firm"></span> · <a href="privacy.html">개인정보 처리방침</a></footer>
+</main>
+<script src="config.js"></script>
+<script src="rules.js"></script>
+<script>
+(function(){
+"use strict";
+const C=window.SITE_CONFIG||{},R=window.RULES||{needs:[],traits:[]},$=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* 링크에 붙은 1회용 표시(?t=...). 거래처 이름이나 번호는 주소에 넣지 않는다. 누구인지는 받는 쪽이 이 표시로 찾는다 */
+const TOKEN=((new URLSearchParams(location.search).get("t")||"").match(/^[A-Za-z0-9_-]{8,80}$/)||[""])[0];
+document.querySelectorAll(".firm").forEach(e=>e.textContent=C.FIRM_NAME||"");
+$("#firmTel").textContent=C.FIRM_TEL?"("+C.FIRM_TEL+")":"";
+$("#draftNote").hidden=!!C.CONSENT_URL;
+const pills=(id,type,list)=>$("#"+id).innerHTML=list.map(x=>`<label><input type="${type}" name="${id}" value="${esc(x[0])}">${esc(x[1])}</label>`).join("");
+pills("needs","checkbox",R.needs.map(n=>[n.key,n.label]).concat([["세금환급","더 낸 세금 돌려받기"]]));
+pills("hire_plan","radio",[["3m","3개월 안에"],["6m","6개월 안에"],["12m","1년 안에"],["none","계획 없음"],["unknown","잘 모르겠다"]]);
+pills("recent","radio",[["yes","최근 3개월 안에 뽑았다"],["no","없다"]]);
+/* 대표자 나이·성별은 묻지 않는다(사무실 자료로 안에서만 계산). 인증과 시설만 묻는다 */
+pills("certs","checkbox",R.traits.map(t=>t.label).filter(l=>!/대표/.test(l)).map(l=>[l,l]));
+pills("how","checkbox",[["sms","문자"],["kakao","카카오톡"],["email","이메일"]]);
+pills("freq","radio",[["each","맞는 공고가 나올 때마다"],["weekly","일주일에 한 번 모아서"],["monthly","한 달에 한 번 모아서"]]);
+const picked=id=>[...document.querySelectorAll(`#${id} input:checked`)].map(i=>i.value),one=id=>picked(id)[0]||"";
+document.getElementById("f").addEventListener("change",()=>{
+  $("#hireMore").hidden=!["3m","6m","12m"].includes(one("hire_plan"));
+  $("#hireDateBox").hidden=one("recent")!=="yes";
+});
+function say(text,cls){const m=$("#msg");m.className="msg "+(cls||"err");m.textContent=text;m.hidden=!text}
+async function submit(){
+  if(!picked("how").length)return say("알림을 받을 방법을 하나 이상 골라 주세요.");
+  if(!$("#consent_privacy").checked)return say("[필수] 개인정보 수집·이용에 동의해 주세요.");
+  if(!$("#consent_ad").checked)return say("알림을 받으려면 안내 수신에 동의해 주세요.");
+  const plan=one("hire_plan"),payload={token:TOKEN,submission_id:"c_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),consent_version:C.SURVEY_CONSENT_VERSION||"",
+    consent_privacy:true,consent_ad:true,consent_night:false,how:picked("how"),phone_confirm:$("#phone_confirm").value.trim(),email_confirm:$("#email_confirm").value.trim(),
+    needs:picked("needs"),hire_plan:plan,hire_youth:$("#hire_youth").checked&&!$("#hireMore").hidden,hire_regular:$("#hire_regular").checked&&!$("#hireMore").hidden,
+    hire_date:one("recent")==="yes"?$("#hire_date").value:"",insured:$("#insured").value.trim(),certs:picked("certs"),freq:one("freq")||"each"};
+  if(!C.CONSENT_URL)return say("시안 화면이라 저장되지 않았습니다. 고르신 내용은 어디에도 보내지 않았습니다.","warn");
+  if(!TOKEN)return say("링크가 올바르지 않습니다. 받으신 문자나 카카오톡의 링크로 다시 열어 주세요.");
+  const btn=$("#send");btn.disabled=true;
+  try{
+    const res=await fetch(C.CONSENT_URL,{method:"POST",body:JSON.stringify(payload),headers:{"Content-Type":"text/plain;charset=utf-8"}});
+    const j=await res.json().catch(()=>({ok:res.ok}));
+    if(!j.ok)throw new Error("fail");
+    say("신청되었습니다. 회사에 맞는 지원사업이 나오면 알려 드리겠습니다. 그만 받고 싶으시면 언제든 말씀해 주세요.","ok");
+  }catch(e){btn.disabled=false;say("보내지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.")}
+}
+$("#send").addEventListener("click",submit);
+})();
+</script>
+</body>
+</html>
