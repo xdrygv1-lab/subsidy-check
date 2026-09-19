@@ -288,7 +288,9 @@ function matchNotices(c,notices,needsDef,limit){
       score+=3*passed.length-8*failed.length;
       if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
       if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
-      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo,sub};
+      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo,sub,
+        /* 받는 쪽이 목록 길이로 짐작하지 않게 판정기가 직접 매긴다. info = 맞춰 본 요건이 없어 지원 내용만 보여 주는 공고 */
+        status:(!(passed.length||failed.length||unknown.length||todo.length))?"info":failed.length?"no":unknown.length?"check":todo.length?"todo":"yes"};
     }
     /* 공고문에 적힌 제외 대상: 회사 업종이 그 업종이면 감점하고 표시 (예: 체인화 편의점은 프랜차이즈 가맹점 제외 공고에서 빠진다) */
     const ease=it.ease||{};
@@ -303,7 +305,15 @@ function matchNotices(c,notices,needsDef,limit){
     out.push({id:it.id,ease:it.ease||null,caution,easy_key:easyKey,facts:factOut,title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
   }
   out.sort((a,b)=>b.score-a.score||(a.end||"9999").localeCompare(b.end||"9999")||(a.posted||"").localeCompare(b.posted||""));
-  return out.slice(0,limit||80);
+  /* 같은 사업의 공고가 운영기관마다 따로 올라온 경우(시니어 인턴십, 일경험, 도약장려금): 점수가 가장 높은 1건만 남기고 나머지는 그 공고에 접어 넣는다 */
+  const merged=[],seen={};
+  for(const r of out){
+    const name=r.facts&&r.facts.name;
+    if(name&&seen[name]){seen[name].same_program.push({title:r.title,url:r.url});continue}
+    if(name){r.same_program=[];seen[name]=r}
+    merged.push(r);
+  }
+  return merged.slice(0,limit||80);
 }
 function evaluate(c){
   const programs=RULES.programs.filter(p=>EVALUATORS[p.id]).map(p=>EVALUATORS[p.id](p,c,DATA.items));
