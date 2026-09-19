@@ -181,15 +181,17 @@ const TAX_AGENT=["","세무사 사무실에 맡기고 있다","직접 신고한�
 function initTax(opts){
   opts=opts||{};
   const box=$("#taxBox"),opt=list=>list.map(x=>`<option value="${esc(x[0])}">${esc(x[1])}</option>`).join("");
-  box.innerHTML=`
-    <div class="two row">
-      <div class="fld"><label for="ceo_birth_year">대표자 출생연도</label><input type="number" id="ceo_birth_year" min="1920" max="2015" placeholder="예: 1988"></div>
-      <div class="fld"><label for="startup_type">사업을 시작한 방법</label><select id="startup_type">${opt(TAX_START)}</select></div>
-    </div>
-    <div class="two row">
+  /* quickBox 를 주면 대표자 출생연도와 직원 수 변화 두 칸을 그 자리에 따로 그린다(공개용의 '빠른 확인' 단계). 칸 이름은 같아서 읽기·되살리기는 그대로다 */
+  const quick=opts.quickBox?$(opts.quickBox):null;
+  const birth=`<div class="fld"><label for="ceo_birth_year">대표자 출생연도</label><input type="number" id="ceo_birth_year" min="1920" max="2015" placeholder="예: 1988"></div>`;
+  const start=`<div class="fld"><label for="startup_type">사업을 시작한 방법</label><select id="startup_type">${opt(TAX_START)}</select></div>`;
+  const incRow=`<div class="two row">
       <div class="fld"><label for="emp_increase">최근 5년 사이 직원 수</label><select id="emp_increase">${opt(TAX_INC)}</select></div>
       <div class="fld" id="empCountBox"><label for="emp_increase_count">가장 많이 늘어난 해에 몇 명쯤</label><input type="number" id="emp_increase_count" min="1" max="1000" placeholder="명"></div>
-    </div>
+    </div>`;
+  if(quick)quick.innerHTML=`<div class="two row">${birth}${start}</div>${incRow}`;
+  box.innerHTML=`
+    ${quick?"":`<div class="two row">${birth}${start}</div>${incRow}`}
     <div class="fld"><label>지금까지 받은 세금 혜택</label>
       <div class="checks one" id="reliefs">${TAX_RELIEFS.map(x=>`<label><input type="checkbox" id="relief_${x[0]}" value="${x[0]}">${esc(x[1])}</label>`).join("")}</div>
     </div>
