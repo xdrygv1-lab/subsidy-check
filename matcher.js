@@ -138,6 +138,7 @@ function ksicsOf(c){
 function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
   const wantsExport=(c.needs||[]).includes("수출")||(c.traits||[]).includes(expTrait);
+  const excludes=RULES.notice_excludes||{};
   const today=todayISO(),wanted=(c.needs&&c.needs.length)?c.needs:needsDef.map(n=>n.key);
   const needs=needsDef.filter(n=>wanted.includes(n.key)),sido=c.sido||"",small=isSmallBiz(c);
   const words=(c.industry_text||"").split(/[\s,\/·ㆍ]+/).filter(w=>w.length>=2&&!GENERIC.has(w)),out=[];
@@ -190,8 +191,17 @@ function matchNotices(c,notices,needsDef,limit){
       if(title.includes("예비창업")){score-=3;flags.push("예비창업자 대상일 수 있음")}
       else if(months>=84){score-=3;flags.push("창업 7년이 지나 대상이 아닐 수 있음")}
     }
+    /* 공고문에 적힌 제외 대상: 회사 업종이 그 업종이면 감점하고 표시 (예: 체인화 편의점은 프랜차이즈 가맹점 제외 공고에서 빠진다) */
+    const ease=it.ease||{};
+    for(const key of ease.excl||[]){
+      const cfg=excludes[key];
+      if(cfg&&cfg.ksic.some(px=>ksics.some(k=>k.startsWith(px)))&&!(cfg.ksic_ok||[]).some(px=>ksics.some(k=>k.startsWith(px)))){score-=5;flags.push(cfg.label)}
+    }
     let dl=null;if(it.end){dl=daysLeft(it.end);if(dl<=7)flags.push("마감 임박")}
-    out.push({title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
+    /* 받기 쉬운 순으로 늘어놓을 때 쓰는 값: «대상이 아닐 수 있음» 류 표시가 없는 공고가 먼저, 다음은 받기 쉬운 점수, 같으면 맞는 점수 */
+    const caution=flags.some(f=>f.endsWith("수 있음"));
+    const easyKey=(caution?0:100000)+Math.trunc(ease.score===undefined?50:ease.score)*100+Math.max(0,Math.min(99,Math.trunc(score)));
+    out.push({id:it.id,ease:it.ease||null,caution,easy_key:easyKey,title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
   }
   out.sort((a,b)=>b.score-a.score||(a.end||"9999").localeCompare(b.end||"9999")||(a.posted||"").localeCompare(b.posted||""));
   return out.slice(0,limit||80);
