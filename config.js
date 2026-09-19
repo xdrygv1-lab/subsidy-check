@@ -17,6 +17,12 @@ window.SITE_CONFIG = {
   RETENTION: "수집일로부터 1년",      // 필수 동의 항목의 보유·이용 기간
   MARKETING_RETENTION: "수신 동의 철회 시까지 (최대 수집일로부터 1년)",
 
+  // 개인정보 처리방침(privacy.html)에 들어가는 값. 정식 공개 때 보관 위치와 시행일을 확정하고 POLICY_FINAL 을 true 로 바꾸면 '초안' 표시가 사라진다.
+  STORAGE_NOTE: "수집한 정보는 세무회계홍인이 관리하는 Google Drive(Google LLC의 클라우드, 국외 서버 포함)에 보관됩니다. 정식 공개 때 사무소 내부 시스템으로 옮기면 이 내용을 고쳐 알립니다.",
+  PRIVACY_OFFICER: "대표 세무사 조상권",
+  POLICY_SINCE: "",
+  POLICY_FINAL: false,
+
   // true: 필수 동의 후 제출해야 결과가 보인다. false: 결과는 바로 보이고 제출은 선택.
   REQUIRE_CONSENT_TO_VIEW: true
 };

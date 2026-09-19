@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>개인정보 처리방침</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{--ground:#F4F6FA;--panel:#FFFFFF;--ink:#101C36;--sub:#56627A;--line:#DCE1EC;--band:#0F1F3D;--band-ink:#F2F5FB;--band-sub:#A9B6D3;--accent:#2B5BD7;--warn:#8A5A00;--warn-bg:#FCF1D6}
+@media (prefers-color-scheme: dark){:root{--ground:#0B1220;--panel:#131C30;--ink:#E6EAF4;--sub:#98A4BC;--line:#26314A;--band:#070D1B;--band-ink:#E6EAF4;--band-sub:#8F9DBB;--accent:#86A6FF;--warn:#F1C56C;--warn-bg:#382D10}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.7 "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+.band{background:var(--band);color:var(--band-ink);padding-block:24px;padding-inline:max(16px,calc((100% - 860px)/2))}
+.band h1{margin:0;font-size:22px;letter-spacing:-.02em}
+.band p{margin:6px 0 0;font-size:13.5px;color:var(--band-sub)}
+main{padding-block:24px 40px;padding-inline:max(16px,calc((100% - 860px)/2));display:flex;flex-direction:column;gap:16px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+h2{margin:0 0 8px;font-size:16px}
+p{margin:0 0 6px} ul{margin:4px 0 0;padding-left:20px} li+li{margin-top:3px}
+.draft{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:13.5px;margin:0}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{width:120px;color:var(--sub);font-weight:500}
+a{color:var(--accent)}
+.sub{color:var(--sub);font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="band">
+  <h1>개인정보 처리방침</h1>
+  <p><span class="firm"></span> · 지원금과 세금 환급 가능성 확인 서비스</p>
+</div>
+<main>
+  <p class="draft" id="draftNote">이 글은 정식 공개 전의 초안입니다. 공개할 때 보관 위치와 시행일을 확정해 다시 올립니다.</p>
+
+  <section><h2>1. 무엇을 위해 쓰나요</h2>
+    <ul>
+      <li>지원금 해당 여부와 세금 환급(경정청구) 가능성 확인 결과를 보여 드리기 위해</li>
+      <li>결과에 대한 문의에 답하고, 상담을 요청하신 경우 연락드리기 위해</li>
+      <li>따로 동의하신 분에 한해 새 지원사업과 세무·경정청구 서비스 안내를 보내 드리기 위해</li>
+      <li>서비스를 시험 운영하고 고치기 위해</li>
+    </ul>
+    <p class="sub" style="margin-top:8px">빠른 확인 단계에서는 입력한 내용이 브라우저 안에서만 계산되고 어디에도 저장되지 않습니다. 개인정보는 연락처를 남기고 동의한 뒤 제출할 때만 수집됩니다.</p>
+  </section>
+
+  <section><h2>2. 어떤 정보를 받나요</h2>
+    <table>
+      <tr><th>꼭 받는 정보</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입 직원 수, 직전연도 매출액, 담당자 성명, 연락처, 이메일</td></tr>
+      <tr><th>입력하면 받는 정보</th><td>사업자등록번호, 업종, 개업 연월, 채용 계획과 채용일·월 급여·주 근로시간, 회사 특성, 필요한 지원, 대표자 출생연도, 사업을 시작한 방법, 직원 수 증가 여부, 받은 세금 혜택, 작년에 낸 세금, 세금 신고 방법</td></tr>
+      <tr><th>자동으로 남는 정보</th><td>제출 시각, 이 페이지를 알게 된 경로(주소에 붙은 표시), 동의한 동의문의 판</td></tr>
+    </table>
+    <p class="sub" style="margin-top:8px">주민등록번호, 계좌번호, 비밀번호는 받지 않습니다. 이 페이지는 쿠키나 방문 기록 수집 도구를 쓰지 않습니다.</p>
+  </section>
+
+  <section><h2>3. 얼마나 보관하나요</h2>
+    <table>
+      <tr><th>확인 서비스</th><td><strong id="retention"></strong>. 기간이 지나거나 삭제를 요청하시면 지체 없이 지웁니다.</td></tr>
+      <tr><th>안내 수신 동의</th><td><strong id="mretention"></strong></td></tr>
+    </table>
+  </section>
+
+  <section><h2>4. 다른 곳에 넘기나요</h2>
+    <p>받은 정보를 다른 회사나 기관에 제공하지 않습니다. 법령에 따라 제출해야 하는 경우에만 예외입니다.</p>
+  </section>
+
+  <section><h2>5. 어디에 보관하고 누가 다루나요</h2>
+    <p id="storageNote"></p>
+    <p class="sub">보관된 정보는 <span class="firm"></span>의 업무 담당자만 볼 수 있습니다.</p>
+  </section>
+
+  <section><h2>6. 어떻게 지우나요</h2>
+    <ul>
+      <li>보관 기간이 지났거나 삭제를 요청하신 정보는 목록과 백업 파일에서 함께 지웁니다.</li>
+      <li>전자 파일은 되살릴 수 없는 방법으로 삭제합니다. 종이로 출력한 것이 있으면 파쇄합니다.</li>
+    </ul>
+  </section>
+
+  <section><h2>7. 내 정보에 대해 요구할 수 있는 것</h2>
+    <ul>
+      <li>내 정보를 보여 달라, 고쳐 달라, 지워 달라, 처리를 멈춰 달라고 언제든 요구할 수 있습니다.</li>
+      <li>안내 수신 동의는 언제든 철회할 수 있습니다. 철회하면 바로 안내를 멈춥니다. 오후 9시부터 다음 날 오전 8시 사이에는 안내를 보내지 않습니다.</li>
+      <li>아래 문의처로 전화나 이메일을 주시면 본인 확인 뒤 지체 없이 처리합니다.</li>
+    </ul>
+  </section>
+
+  <section><h2>8. 안전하게 지키기 위해 하는 일</h2>
+    <ul>
+      <li>정보는 암호화된 연결(https)로만 전송됩니다.</li>
+      <li>보관 장소는 사무소 계정으로만 열리고, 볼 수 있는 사람을 업무 담당자로 제한합니다.</li>
+    </ul>
+  </section>
+
+  <section><h2>9. 책임자와 문의처</h2>
+    <table>
+      <tr><th>개인정보처리자</th><td><span class="firm"></span></td></tr>
+      <tr><th>보호책임자</th><td id="officer"></td></tr>
+      <tr><th>문의처</th><td id="contact"></td></tr>
+    </table>
+    <p class="sub" style="margin-top:8px">개인정보 침해에 대한 상담은 개인정보침해신고센터(국번 없이 118), 개인정보 분쟁조정위원회(1833-6972)에서도 받을 수 있습니다.</p>
+  </section>
+
+  <section><h2>10. 이 방침의 판과 시행일</h2>
+    <p>판: <span id="ver"></span> · 시행일: <span id="since"></span></p>
+    <p class="sub">내용이 바뀌면 이 페이지에 바뀐 날과 함께 알립니다.</p>
+  </section>
+
+  <p><a href="./">확인 페이지로 돌아가기</a></p>
+</main>
+<script src="config.js"></script>
+<script>
+(function(){
+  const C=window.SITE_CONFIG||{},$=s=>document.querySelector(s);
+  document.querySelectorAll(".firm").forEach(e=>e.textContent=C.FIRM_NAME||"");
+  $("#retention").textContent=C.RETENTION||"";$("#mretention").textContent=C.MARKETING_RETENTION||"";
+  $("#storageNote").textContent=C.STORAGE_NOTE||"";
+  $("#officer").textContent=C.PRIVACY_OFFICER||"";$("#contact").textContent=C.FIRM_CONTACT||"";
+  $("#ver").textContent=C.CONSENT_VERSION||"";$("#since").textContent=C.POLICY_SINCE||"정식 공개일에 확정";
+  $("#draftNote").hidden=!!C.POLICY_FINAL;
+})();
+</script>
+</body>
+</html>
