@@ -52,6 +52,8 @@ input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visi
 .checks label{display:flex;gap:7px;align-items:flex-start;font-size:14px;cursor:pointer}
 .checks input{margin-top:5px;accent-color:var(--accent)}
 .hint{font-size:12.5px;color:var(--sub);margin:0}
+.under5{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.amt{margin-left:8px;color:var(--accent);font-weight:700}
 .consent{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--field);display:flex;flex-direction:column;gap:8px}
 .consent label{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:700;cursor:pointer}
 .consent input{margin-top:5px;accent-color:var(--accent)}
@@ -147,6 +149,11 @@ footer p{margin:4px 0;max-width:90ch}
       </div>
       <div class="fld"><label for="insured" class="req">4대보험(고용보험) 가입 직원 수</label><input type="number" id="insured" min="0" max="100000" placeholder="명">
         <p class="hint">대표자는 제외합니다. 최근 1년 평균을 모르면 현재 직원 수를 적어 주세요.</p></div>
+      <div class="under5" id="excBox" hidden>
+        <span class="lbl req">직원이 5명 미만이면 해당하는 것을 골라 주세요</span>
+        <div class="checks one" id="exceptions"></div>
+        <p class="hint" id="excHint">5명 미만 회사는 아래에 해당할 때만 지원 대상입니다. 해당하는 것이 없으면 "해당 없음"을 고르세요.</p>
+      </div>
 
       <div class="group"><span class="gt">업종과 매출</span>
         <div class="two">
@@ -157,7 +164,7 @@ footer p{margin:4px 0;max-width:90ch}
         <div class="fld"><label for="industry_code">국세청 업종코드 (자동 입력)</label><input type="text" id="industry_code" placeholder="종목을 고르면 자동으로 들어갑니다" inputmode="numeric" maxlength="6">
           <p class="hint" id="codeHint">사업자등록증의 업태와 종목을 고르면 됩니다. 코드는 몰라도 괜찮습니다.</p></div>
         <div class="two">
-          <div class="fld"><label for="sales_manwon">직전연도 연 매출액 (만원, 선택)</label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
+          <div class="fld"><label for="sales_manwon">직전연도 연 매출액 (만원)<span class="amt" id="salesText"></span></label><input type="number" id="sales_manwon" min="0" placeholder="예: 85000"></div>
           <div class="fld"><label for="founded">개업 연월</label><input type="month" id="founded"></div>
         </div>
       </div>
@@ -178,10 +185,6 @@ footer p{margin:4px 0;max-width:90ch}
         </div>
       </div>
 
-      <div class="group" id="excBox"><span class="gt">5인 미만 예외 (해당 시 선택)</span>
-        <div class="checks one" id="exceptions"></div>
-        <p class="hint">국세청 업종코드를 넣으면 지식서비스산업 여부를 자동으로 추정합니다.</p>
-      </div>
 
       <div class="group"><span class="gt">기타 확인</span>
         <div class="checks one">
@@ -304,8 +307,7 @@ function readCompany(){
   return {name:val("name"),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
     industry_code:val("industry_code"),industry_text:industryText(),industry_hint:industryHint(),sales_manwon:val("sales_manwon"),founded:val("founded"),
     hire_plan:val("hire_plan"),hire_count:val("hire_count"),hire_youth:$("#hire_youth").checked,hire_regular:$("#hire_regular").checked,hire_hard:val("hire_hard"),
-    flags:{mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked,
-      exceptions:[...document.querySelectorAll("#exceptions input:checked")].map(i=>i.value)},
+    flags:Object.assign({mid_size_in_complex:$("#mid_size_in_complex").checked,layoff:$("#layoff").checked,arrears:$("#arrears").checked},readExceptions()),
     needs:[...document.querySelectorAll("#needs input:checked")].map(i=>i.value)};
 }
 /* ---------- 업태·종목 드롭다운: 국세청 업종코드표의 대분류(업태)와 세세분류(종목). 종목을 고르면 업종코드가 자동으로 들어간다 ---------- */
@@ -340,17 +342,45 @@ function onJongmok(){
   else hint.textContent="사업자등록증의 업태와 종목을 고르면 됩니다. 코드는 몰라도 괜찮습니다.";
 }
 
+/* ---------- 5인 미만 예외: 하나 이상 고르거나 "해당 없음"을 고른다 ---------- */
+const NONE=(RULES.programs[0]||{}).under5_none_label||"해당 없음";
+function renderExceptions(){
+  const list=(RULES.programs[0]||{}).under5_exceptions||[];
+  $("#exceptions").innerHTML=list.map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.short||e.key)}">${esc(e.label)}</label>`).join("")
+    +`<label><input type="checkbox" id="exc_none" value="${esc(NONE)}">${esc(NONE)}</label>`;
+}
+function onExceptionChange(e){
+  const t=e.target;if(!t||t.type!=="checkbox")return;
+  if(t.id==="exc_none"&&t.checked)document.querySelectorAll("#exceptions input").forEach(i=>{if(i!==t)i.checked=false});
+  else if(t.checked)$("#exc_none").checked=false;
+}
+function readExceptions(){
+  if($("#excBox").hidden)return {exceptions:[],exceptions_none:false};
+  return {exceptions:[...document.querySelectorAll("#exceptions input:checked")].map(i=>i.value),exceptions_none:$("#exc_none").checked};
+}
+/* 고른 종목이 지식서비스산업이면 그 칸을 자동으로 체크해 준다 */
+function syncKnowledge(){
+  const box=$("#exc_knowledge");if(!box||$("#excBox").hidden)return;
+  const isK=String((industryHint().f)||"").includes("K");
+  if(isK&&!box.checked){box.checked=true;$("#exc_none").checked=false}
+  $("#excHint").textContent=isK?"고른 종목이 지식서비스산업에 해당해 자동으로 체크했습니다. 다른 항목도 해당하면 함께 고르세요."
+    :'5명 미만 회사는 아래에 해당할 때만 지원 대상입니다. 해당하는 것이 없으면 "해당 없음"을 고르세요.';
+}
+function showSalesText(){$("#salesText").textContent=M.moneyText($("#sales_manwon").value)}
+
 function toggle(){
   $("#hireMore").hidden=$("#hire_plan").value==="없음";
   const n=parseFloat($("#insured").value);$("#excBox").hidden=!(n>0&&n<5);
+  syncKnowledge();showSalesText();
 }
 function showFormMsg(text,focusId){const m=$("#formMsg");m.textContent=text;m.hidden=!text;if(focusId)$("#"+focusId).focus()}
 function validate(){
   if(!val("name"))return showFormMsg("회사명을 입력해 주세요.","name"),false;
   if(!val("sido"))return showFormMsg("사업장 주소의 시도를 선택해 주세요.","sido"),false;
   if(val("insured")==="")return showFormMsg("4대보험 가입자 수를 입력해 주세요. 없으면 0을 넣습니다.","insured"),false;
+  if(!$("#excBox").hidden&&!document.querySelector("#exceptions input:checked"))return showFormMsg("직원이 5명 미만이면 해당하는 항목을 골라 주세요. 없으면 \"해당 없음\"을 고릅니다.","exc_none"),false;
   if(!val("contact_name"))return showFormMsg("담당자 성명을 입력해 주세요.","contact_name"),false;
-  if(val("contact_phone").replace(/\D/g,"").length<9)return showFormMsg("연락처를 정확히 입력해 주세요.","contact_phone"),false;
+  if(!M.validPhone(val("contact_phone")))return showFormMsg("연락처를 다시 확인해 주세요. 예: 010-1234-5678","contact_phone"),false;
   const em=val("contact_email");if(!em)return showFormMsg("이메일을 입력해 주세요.","contact_email"),false;
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))return showFormMsg("이메일 형식을 확인해 주세요.","contact_email"),false;
   if(!$("#consent_required").checked)return showFormMsg("[필수] 개인정보 수집·이용에 동의해야 결과를 확인할 수 있습니다.","consent_required"),false;
@@ -491,7 +521,7 @@ $("#sido").innerHTML='<option value="">시도 선택</option>'+SIDO.map(s=>`<opt
 $("#upte").innerHTML='<option value="">업태 선택</option>'+GROUPS.map(g=>`<option>${esc(g.upte)}</option>`).join("");
 $("#bSido").innerHTML='<option value="">지역 전체</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");
 $("#needs").innerHTML=RULES.needs.map(n=>`<label><input type="checkbox" id="need_${esc(n.key)}" value="${esc(n.key)}">${esc(n.label)}</label>`).join("");
-$("#exceptions").innerHTML=((RULES.programs[0]||{}).under5_exceptions||[]).map(e=>`<label><input type="checkbox" id="exc_${esc(e.key)}" value="${esc(e.key)}">${esc(e.label)}</label>`).join("");
+renderExceptions();
 $("#dataMeta").textContent=DATA.count?`기업마당 진행 공고 ${won(DATA.count)}건 기준 (${DATA.collected_at} 수집)`:"";
 if(!CFG.REQUIRE_CONSENT_TO_VIEW)$("#submit").textContent="동의하고 제출";
 $("#f").addEventListener("input",()=>{
@@ -508,6 +538,8 @@ $("#jmSearch").addEventListener("input",()=>{fillJongmok();onJongmok()});
 $("#bSido").addEventListener("change",()=>{bSidoTouched=true;bShown=30;renderBrowse()});
 $("#bSearch").addEventListener("input",()=>{bShown=30;renderBrowse()});
 $("#bMore").addEventListener("click",()=>{bShown+=30;renderBrowse()});
+$("#exceptions").addEventListener("change",onExceptionChange);
+$("#contact_phone").addEventListener("input",e=>{e.target.value=M.formatPhone(e.target.value)});
 $("#submit").addEventListener("click",onSubmit);
 toggle();renderEasy();renderBrowse();
 })();

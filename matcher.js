@@ -28,15 +28,17 @@ function evalYouthLeap(prog,c,notices){
   const ptype=prog.types.find(t=>t.key===(capital?"수도권":"비수도권")),flags=c.flags||{},code=codeOf(c);
   const labels=Object.fromEntries(prog.conditions.map(x=>[x.key,x])),results=[];
   const add=(key,status,message)=>results.push({key,label:labels[key].label,status,message,detail:labels[key].detail,source:labels[key].source});
-  const excLabels=Object.fromEntries(prog.under5_exceptions.map(e=>[e.key,e.label]));
+  /* 예외 항목은 key 또는 짧은 이름(short)으로 들어온다. "해당 없음"은 예외가 없다는 뜻 */
+  const excLabels={};prog.under5_exceptions.forEach(e=>{excLabels[e.key]=e.short||e.label;if(e.short)excLabels[e.short]=e.short});
+  const noneLabel=prog.under5_none_label||"해당 없음",excNone=!!flags.exceptions_none||(flags.exceptions||[]).includes(noneLabel);
   const iflags=flagsOf(c),knowledge=iflags.includes("K")?(c.industry_text||(infoOf(c)||{}).n||"선택한 종목"):null;
   const chosen=(flags.exceptions||[]).filter(k=>excLabels[k]).map(k=>excLabels[k]);
   if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명`);
   else if(n>=p.min_insured_exception){
     if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
-    else if(!code)add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 국세청 업종코드를 넣거나 해당하는 예외 항목을 선택`);
-    else add("insured","fail",`${n}명. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
+    else if(excNone)add("insured","fail",`${n}명이고 5인 미만 예외에 해당하지 않는 것으로 입력됨. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
+    else add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 5인 미만 예외에서 해당 항목을 고르고, 없으면 해당 없음을 선택`);
   }else add("insured","fail","고용보험 가입자가 없음");
 
   const limits=prog.priority_company_limits,limit=limits[sectionOf(c)]||limits.default;
@@ -164,5 +166,28 @@ function parseSummary(s){
   return {intro,blocks};
 }
 
-window.Matcher={evaluate,todayISO,daysLeft,parseSummary,won,RULES,DATA,INDUSTRY:IND};
+/* 만원 단위 숫자를 읽기 쉬운 말로: 8000 -> 8천만원, 85000 -> 8억 5천만원 */
+function moneyText(v){
+  const n=Math.floor(Number(String(v==null?"":v).replace(/,/g,"")));
+  if(!isFinite(n)||n<=0)return "";
+  const eok=Math.floor(n/10000),rest=n%10000,parts=[];
+  if(eok)parts.push(eok.toLocaleString("ko-KR")+"억");
+  if(rest)parts.push(rest%1000===0?(rest/1000)+"천만":rest.toLocaleString("ko-KR")+"만");
+  return parts.join(" ")+"원";
+}
+/* 전화번호를 000-0000-0000 형식으로 */
+function formatPhone(v){
+  const d=String(v||"").replace(/\D/g,"").slice(0,11);
+  if(d.startsWith("02")){
+    if(d.length<=2)return d;if(d.length<=5)return d.slice(0,2)+"-"+d.slice(2);
+    if(d.length<=9)return d.slice(0,2)+"-"+d.slice(2,5)+"-"+d.slice(5);
+    return d.slice(0,2)+"-"+d.slice(2,6)+"-"+d.slice(6,10);
+  }
+  if(d.length<=3)return d;if(d.length<=7)return d.slice(0,3)+"-"+d.slice(3);
+  if(d.length<=10)return d.slice(0,3)+"-"+d.slice(3,6)+"-"+d.slice(6);
+  return d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
+}
+const validPhone=v=>{const d=String(v||"").replace(/\D/g,"");return /^01[016789]\d{7,8}$/.test(d)||/^0(2|[3-6]\d)\d{7,8}$/.test(d)||/^0(70|50\d?)\d{7,8}$/.test(d)};
+
+window.Matcher={evaluate,todayISO,daysLeft,parseSummary,moneyText,formatPhone,validPhone,won,RULES,DATA,INDUSTRY:IND};
 })();
