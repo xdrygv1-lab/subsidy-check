@@ -588,7 +588,7 @@ function factsHTML(f){
   return `<div class="facts"><strong>${esc(f.benefit||"")}</strong>
     ${f.status==="info"?`<p class="hint">공고문에서 옮긴 지원 내용입니다. 입력한 값으로 미리 가려 볼 숫자 요건은 없는 사업이라, 아래 주의할 점을 보고 판단하세요.</p>`:""}
     <ul>${li(f.passed||[],"맞음:")}${li(f.failed||[],"안 맞음:")}${li(f.todo||[],"이렇게 하면:")}${li(f.unknown||[],"확인할 것:")}</ul>
-    ${(f.sub||[]).length?`<div class="subs"><strong>자금별로 보면</strong>${f.sub.map(s=>`<div class="sub"><span class="tag ${s.status==="yes"?"ease-easy":s.status==="no"?"ease-hard":"ease-mid"}">${({yes:"맞을 가능성",check:"확인 필요",todo:"조건이 되면",no:"안 맞음"})[s.status]}</span><b>${esc(s.name)}</b> ${esc(s.benefit||"")}<div class="s">${esc([].concat(s.passed||[],s.failed||[],s.todo||[],s.unknown||[]).join(" / "))}</div></div>`).join("")}</div>`:""}
+    ${(f.sub||[]).length?`<div class="subs"><strong>자금별로 보면</strong>${f.sub.map(s=>`<div class="sub"><span class="tag ${s.status==="yes"?"ease-easy":s.status==="no"?"ease-hard":"ease-mid"}">${({yes:"맞을 가능성",check:"확인 필요",todo:"조건이 되면",no:"안 맞음",info:"따로 가릴 요건 없음"})[s.status]}</span><b>${esc(s.name)}</b> ${esc(s.benefit||"")}<div class="s">${esc([].concat(s.passed||[],s.failed||[],s.todo||[],s.unknown||[]).join(" / "))}</div></div>`).join("")}</div>`:""}
     <details><summary>신청 방법과 주의할 점</summary><p>${esc(f.how||"")}</p><ul>${(f.notes||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="hint">${esc(f.verified||"")}</p></details></div>`;
 }
 /* ---------- 세금 환급 가능성과 상담 요청 ---------- */

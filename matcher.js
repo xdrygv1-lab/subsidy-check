@@ -146,12 +146,19 @@ function factCheck(ck,c){
   const t=ck.type,sales=num(c.sales_manwon);
   if(t==="sales_gt0")return sales===null?null:sales>0;
   if(t==="sales_lt"||t==="sales_lte"){if(sales===null)return null;let v=ck.vat_included?sales*1.1:sales;
-    if(ck.annualize_year){const fm=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));if(fm&&+fm[1]===ck.annualize_year)v=v/(13-(+fm[2]))*12}   /* 그 해에 개업했으면 월평균을 12개월로 환산 */
+    const months=num(c.sales_months);let partial=false;   /* 매출이 몇 달치인지(사무실 자료). 12개월치가 아니면 환산값은 어림이라 단정하지 않는다 */
+    if(months!==null&&months>0&&months<12){v=v/months*12;partial=true}
+    else if(ck.annualize_year){const fm=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));if(fm&&+fm[1]===ck.annualize_year){v=v/(13-(+fm[2]))*12;partial=true}}   /* 그 해에 개업했으면 월평균을 12개월로 환산 */
+    if(partial)return {k:"partial",v};
+    if(ck.near&&Math.abs(v-ck.manwon)<=ck.manwon*ck.near)return {k:"near",v};   /* 기준선 가까이: 신고 매출의 기준이 조금만 달라도 뒤집힌다 */
     return t==="sales_lt"?v<ck.manwon:v<=ck.manwon}
   if(t==="small_biz"){
     let n=num(c.insured);if(n===null)return null;
+    const n0=n;
     if(ck.exclude_hired_since){const cnt=(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length;n-=ck.exclude_max?Math.min(cnt,ck.exclude_max):cnt}   /* 공고문이 «지원 대상 새 직원은 상시근로자 수에서 뺀다» 고 한 경우. 지원 대상이 되는 수까지만 뺀다 */
-    return n<(SMALL10.has(sectionOf(c))?10:5);
+    const lim=SMALL10.has(sectionOf(c))?10:5,low=num(c.insured_low);   /* 직원 수를 달리 세면 나오는 더 작은 값. 그 값으로는 결과가 달라지면 단정하지 않는다 */
+    if(low!==null&&((low-(n0-n))<lim)!==(n<lim))return null;
+    return n<lim;
   }
   if(t==="hired_since"){   /* 그 날짜(부터 until 까지)에 새로 뽑아 지금도 일하는 직원이 있는가. hire_dates_on 이 없으면 입력한 채용일 1건으로 보고, 그것도 없으면 모름 */
     const until=ck.until||"9999-12-31",inRange=x=>ck.date<=String(x)&&String(x)<=until;
@@ -164,8 +171,10 @@ function factCheck(ck,c){
   }
   if(t==="insured_gte"){
     if((ck.unless_traits||[]).some(x=>(c.traits||[]).includes(x)))return true;   /* 인원 요건의 예외(벤처·이노비즈·사회적기업 등)로 입력된 회사 */
-    if((ck.unless_industry_flags||[]).some(f=>flagsOf(c).includes(f)))return true;   /* 업종 표시로 예외인 회사(K 지식서비스산업 등) */
-    const n=num(c.insured);return n===null?null:n>=ck.n;
+    const n=num(c.insured),low=num(c.insured_low);
+    if(n!==null&&n>=ck.n)return (low!==null&&low<ck.n)?null:true;   /* 달리 세면 경계 아래로 내려가는 곳은 단정하지 않는다 */
+    if((ck.unless_industry_flags||[]).some(f=>flagsOf(c).includes(f)))return {k:"maybe",v:null};   /* 업종 표시(K 지식서비스산업 등)는 참고용 어림이라 예외에 든다고 단정하지 않는다: «확인할 것» */
+    return n===null?null:false;
   }
   if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return sg?sg.includes(ck.value):null}   /* 회사 시군구에 그 이름이 들어 있는가(제목에 구 이름이 없는 구청 사업) */
   if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
@@ -188,9 +197,16 @@ function factCheck(ck,c){
   if(t==="sales_half_drop"){   /* 상반기 매출 x 2 가 전년 매출의 ratio 이하(어림값). 같은 기간끼리 견준 것이 아니라 확정하지 않는다 */
     const s=num(c.sales_manwon),h=num(c[ck.half_field]);
     if(s===null||h===null||s<=0)return null;
+    const months=num(c.sales_months),fy=/^(\d{4})/.exec(String(c.founded||""));
+    if((months!==null&&months<12)||(fy&&+fy[1]>=+todayISO().slice(0,4)-1))return null;   /* 전년 매출이 12개월치가 아니면(지난해나 올해 개업 포함) 견줄 수 없다 */
+    const empty=num(c.sales_1to6_empty_months);
+    if(empty!==null&&empty>=(ck.max_empty_months===undefined?4:ck.max_empty_months))return {k:"sparse",v:null};   /* 전표를 한 달에 몰아 적은 곳: 매출이 줄었다고 보지 않는다 */
+    if(c.sales_1to6_vat_checked!==undefined&&c.sales_1to6_vat_checked!==true)return {k:"unverified",v:null};   /* 부가세 신고서와 대조되지 않은 상반기 매출 */
     return h*2/s<=ck.ratio;
   }
   if(t==="trait")return (c.traits||[]).includes(ck.label)?true:null;
+  if(t==="not"){const r=factCheck(ck.check,c);return typeof r==="boolean"?!r:null}   /* 안의 요건을 뒤집는다(모르거나 단정할 수 없으면 그대로 모름) */
+  if(t==="ksic_not"){const ks=ksicsOf(c);return ks.length?!ks.some(k=>ck.ksic.some(px=>k.startsWith(px))):null}   /* 회사 업종이 그 분류로 시작하면 안 맞음. 업종을 모르면 모름 */
   if(t==="any_of"||t==="all_of"){
     const rs=(ck.checks||[]).map(x=>factCheck(x,c));
     if(t==="any_of")return rs.some(r=>r===true)?true:(rs.length&&rs.every(r=>r===false)?false:null);
@@ -203,6 +219,9 @@ function runChecks(checks,c){
   const passed=[],failed=[],unknown=[],todo=[],softHits=[];
   for(const ck of checks||[]){
     const res=factCheck(ck,c);
+    if(res&&typeof res==="object"){   /* 단정할 수 없는 까닭이 있는 경우(예외 업종일 수 있음, 부분연도, 기준선 근처 등): 까닭을 글에 붙여 «확인할 것» 으로 */
+      const text=ck[res.k+"_text"]||(ck.text+((RULES.notice_fact_texts||{})[res.k]||""));
+      unknown.push(text.split("{v}").join(res.v===null||res.v===undefined?"":Math.floor(res.v+0.5).toLocaleString("en-US")));continue}
     if(res===false&&ck.soft){todo.push(ck.soft_text||ck.text);if(ck.soft_flag)softHits.push([ck.soft_flag,ck.soft_penalty||0])}   /* 안 맞아도 탈락이 아닌 요건: «하면 받을 수 있는 것» 으로 두고, 표시와 감점이 적혀 있으면 모은다 */
     else (res===true?passed:res===false?failed:unknown).push(ck.text);
   }
@@ -212,6 +231,8 @@ function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
   const wantsExport=(c.needs||[]).includes("수출")||(c.traits||[]).includes(expTrait);
   const excludes=RULES.notice_excludes||{},local=RULES.local_title||null,facts=RULES.notice_facts||[];
+  const tech=RULES.tech_startup||null;
+  const sidoRe=(local&&(local.sido_names||[]).length)?new RegExp("(?:^|[\\s(\\[\\-ㆍ·,])("+local.sido_names.join("|")+")(?=[\\s)\\],ㆍ·]|광역시|특별|시\\s|도\\s|권\\s|지역|$)"):null;
   const today=todayISO(),wanted=(c.needs&&c.needs.length)?c.needs:needsDef.map(n=>n.key);
   const needs=needsDef.filter(n=>wanted.includes(n.key)),sido=c.sido||"",small=isSmallBiz(c);
   const words=(c.industry_text||"").split(/[\s,\/·ㆍ]+/).filter(w=>w.length>=2&&!GENERIC.has(w)),out=[];
@@ -268,10 +289,21 @@ function matchNotices(c,notices,needsDef,limit){
       if(title.includes("예비창업")){score-=3;flags.push("예비창업자 대상일 수 있음")}
       else if(months>=84){score-=3;flags.push("창업 7년이 지나 대상이 아닐 수 있음")}
     }
+    /* 기술 창업(투자 유치형) 공고: 회사 업종을 아는데 기술 업종이 아니고 벤처·이노비즈·연구소 특성도 없으면 감점하고 표시 */
+    if(tech&&ksics.length){
+      let t2=title;(tech.strip||[]).forEach(w=>{t2=t2.split(w).join("")});
+      if(tech.keywords.some(k=>t2.includes(k))&&!ksics.some(k=>tech.ksic_ok.some(px=>k.startsWith(px)))&&!(c.traits||[]).some(t=>tech.traits_ok.includes(t))){score-=tech.penalty||0;flags.push(tech.flag)}
+    }
     /* 제목에 [시도] 표시 없이 시·군 이름만 적힌 공고: 회사 시군구와 다르면 감점하고 표시 (다른 지역 사람을 부르는 관광객 유치 사업은 그대로) */
     if(local&&!(it.sido||[]).length&&!(local.skip_if_title_has||[]).some(w=>title.includes(w))){
       const lm=/(?:^|\s)([가-힣]{2,4}(?:시|군))(?=\s)/.exec(title.slice(0,30));
-      if(lm&&!(local.skip_names||[]).includes(lm[1])&&!(local.skip_suffix&&lm[1].endsWith(local.skip_suffix))){
+      const sm=sidoRe?sidoRe.exec(title):null;
+      /* 제목에 시도 이름만 적힌 공고(«창업-BuS at 경북», «소담스퀘어 in 전남»): 회사 시도를 모르면 말하지 않는다 */
+      if(sm){
+        if(sm[1]===(c.sido||"")){score+=local.bonus||0;const rest=reasons.filter(r=>r!=="지역: 전국");reasons.length=0;reasons.push("지역: "+sm[1],...rest)}
+        else if(c.sido){score-=local.penalty||0;flags.push(sm[1]+" 지역 사업일 수 있음")}
+      }
+      else if(lm&&!(local.skip_names||[]).includes(lm[1])&&!(local.skip_suffix&&lm[1].endsWith(local.skip_suffix))){
         if((c.sigungu||"").includes(lm[1])){score+=local.bonus||0;const rest=reasons.filter(r=>r!=="지역: 전국");reasons.length=0;reasons.push("지역: "+lm[1],...rest)}
         else{score-=local.penalty||0;flags.push(lm[1]+" 지역 사업일 수 있음")}
       }
@@ -281,10 +313,11 @@ function matchNotices(c,notices,needsDef,limit){
     let factOut=null;
     if(fact){
       const {passed,failed,unknown,todo,softHits}=runChecks(fact.checks,c);
+      if(fact.flag){score-=fact.flag_penalty||0;flags.push(fact.flag)}   /* 받은 곳만 신청할 수 있는 사업처럼 공고 자체에 붙는 표시 */
       for(const [flagText,pen] of softHits){score-=pen;flags.push(flagText)}   /* 예외에 들 때만 되는 요건(직원 10명 이상 등): 탈락이라 단정하지 않되 표시를 달고 뒤로 보낸다 */
       /* 한 공고 안의 세부 사업(자금)마다 따로 가린다. 점수에는 넣지 않고 보여 주기만 한다 */
       const sub=(fact.sub||[]).map(sp=>{const r=runChecks(sp.checks,c);
-        return {name:sp.name,benefit:sp.benefit||null,status:r.failed.length?"no":(r.unknown.length?"check":(r.todo.length?"todo":"yes")),passed:r.passed,failed:r.failed,unknown:r.unknown,todo:r.todo}});
+        return {name:sp.name,benefit:sp.benefit||null,status:!(r.passed.length||r.failed.length||r.unknown.length||r.todo.length)?"info":(r.failed.length?"no":(r.unknown.length?"check":(r.todo.length?"todo":"yes"))),passed:r.passed,failed:r.failed,unknown:r.unknown,todo:r.todo}});
       score+=3*passed.length-8*failed.length;
       if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
       if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
@@ -301,7 +334,8 @@ function matchNotices(c,notices,needsDef,limit){
     let dl=null;if(it.end){dl=daysLeft(it.end);if(dl<=7)flags.push("마감 임박")}
     /* 받기 쉬운 순으로 늘어놓을 때 쓰는 값: «대상이 아닐 수 있음» 류 표시가 없는 공고가 먼저, 다음은 받기 쉬운 점수, 같으면 맞는 점수 */
     const caution=flags.some(f=>f.endsWith("수 있음"));
-    const easyKey=(caution?0:100000)+Math.trunc(ease.score===undefined?50:ease.score)*100+Math.max(0,Math.min(99,Math.trunc(score)));
+    /* 받기 쉬운 점수 x 맞는 점수(0~30). 쉬운 점수를 먼저 보던 때에는 맞는 점수가 낮은 전국 공고가 쉽다는 까닭만으로 누구에게나 맨 위에 왔다 */
+    const easyKey=(caution?0:100000)+Math.trunc(ease.score===undefined?50:ease.score)*Math.max(0,Math.min(30,Math.trunc(score)));
     out.push({id:it.id,ease:it.ease||null,caution,easy_key:easyKey,facts:factOut,title,field:it.field,org:it.org,period:it.period,end:it.end,days_left:dl,posted:it.posted,url:it.url,apply_url:it.apply_url||"",how:it.how||"",contact:it.contact||"",summary:it.summary||"",needs:hit,reasons,flags,score});
   }
   out.sort((a,b)=>b.score-a.score||(a.end||"9999").localeCompare(b.end||"9999")||(a.posted||"").localeCompare(b.posted||""));
