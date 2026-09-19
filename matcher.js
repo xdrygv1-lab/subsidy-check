@@ -101,10 +101,10 @@ function evalYouthLeap(prog,c,notices){
   const hireFail=results.some(r=>(r.key==="hire"||r.key==="work")&&r.status==="fail");
   const checks=results.filter(r=>r.status==="check"&&(r.key!=="hire"||hireReady));
   let verdict,level;
-  if(companyFail){verdict="대상 아님";level="no"}
-  else if(hireFail){verdict="이번 채용은 대상 아님";level="no"}
-  else if(hireReady&&!checks.length){verdict="신청 권장";level="yes"}
-  else if(hireReady){verdict="신청 검토 (확인 항목 있음)";level="maybe"}
+  if(companyFail){verdict="대상이 아닐 가능성 높음";level="no"}
+  else if(hireFail){verdict="이번 채용은 대상이 아닐 가능성 높음";level="no"}
+  else if(hireReady&&!checks.length){verdict="대상일 가능성 높음";level="yes"}
+  else if(hireReady){verdict="대상일 가능성 있음 (확인 항목 있음)";level="maybe"}
   else{verdict="청년 채용 시 활용 가능";level="maybe"}
 
   const cap=Math.max(1,Math.floor(n*p.cap_ratio));let estimate=null;

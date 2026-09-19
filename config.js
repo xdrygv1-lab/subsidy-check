@@ -8,7 +8,11 @@ window.SITE_CONFIG = {
   FIRM_CONTACT: "",                 // 예: "02-000-0000 / help@example.com" (개인정보 문의처로 동의문에 표시)
 
   // 동의문에 들어가는 값
-  CONSENT_VERSION: "2026-09-19-2",   // 수집 항목에 회사 특성, 채용일·급여·근로시간을 추가한 판
+  CONSENT_VERSION: "2026-09-19-3",   // 세금 환급 확인 항목, 사업자등록번호, 유입 경로, 세무·경정청구 서비스 안내를 추가한 판
+
+  // 구글 시트에 '유입 경로, 상담 요청, 세금 환급 진단' 칸이 생긴 뒤(Code.gs 새 버전 배포 후) true 로 바꾼다.
+  // false 인 동안에는 같은 내용이 시트의 '추가 정보' 칸에 함께 적힌다.
+  SHEET_HAS_TAX_COLUMNS: false,
   RETENTION: "수집일로부터 1년",      // 필수 동의 항목의 보유·이용 기간
   MARKETING_RETENTION: "수신 동의 철회 시까지 (최대 수집일로부터 1년)",
 

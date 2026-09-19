@@ -130,7 +130,7 @@ footer p{margin:4px 0;max-width:90ch}
 <body>
 <div class="band">
   <h1 id="siteTitle">우리 회사 지원금 확인</h1>
-  <p id="siteSub">회사 기본자료를 넣으면 청년일자리도약장려금 해당 여부와 지금 신청할 수 있는 지원사업 공고를 바로 확인할 수 있습니다.</p>
+  <p id="siteSub">회사 기본자료를 넣으면 청년일자리도약장려금 해당 여부, 더 낸 세금을 돌려받을 가능성, 지금 신청할 수 있는 지원사업 공고를 바로 확인할 수 있습니다.</p>
 </div>
 
 <div class="wrap">
@@ -138,6 +138,8 @@ footer p{margin:4px 0;max-width:90ch}
     <h2>회사 기본자료</h2>
     <form id="f" autocomplete="on" novalidate>
       <div class="fld"><label for="name" class="req">회사명</label><input type="text" id="name" name="organization" maxlength="60"></div>
+      <div class="fld"><label for="biz_no">사업자등록번호</label><input type="text" id="biz_no" inputmode="numeric" placeholder="000-00-00000" maxlength="12">
+        <p class="hint">넣지 않아도 됩니다. 넣으면 상담할 때 회사를 바로 확인할 수 있습니다.</p></div>
       <div class="fld"><span class="lbl">사업자 구분</span>
         <div class="seg">
           <label><input type="radio" id="bizP" name="biz_type" value="개인" checked>개인</label>
@@ -200,6 +202,10 @@ footer p{margin:4px 0;max-width:90ch}
         </div>
       </div>
 
+      <div class="group"><span class="gt">더 낸 세금 돌려받기</span>
+        <div id="taxBox" style="display:contents"></div>
+      </div>
+
       <div class="group"><span class="gt">회사 특성 (해당하는 것만 체크)</span>
         <div class="checks one" id="traits"></div>
         <p class="hint">체크한 항목에 맞는 우대 공고를 함께 찾아 줍니다.</p>
@@ -224,8 +230,8 @@ footer p{margin:4px 0;max-width:90ch}
           <label><input type="checkbox" id="consent_required">[필수] 개인정보 수집·이용에 동의합니다</label>
           <details><summary>내용 보기</summary>
             <table>
-              <tr><th>수집·이용 목적</th><td>지원금 해당 여부 확인 결과 제공, 결과에 대한 문의 응대, 서비스 시험 운영과 개선</td></tr>
-              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 채용일·월 급여·주 근로시간(입력한 경우), 회사 특성(대표자 청년·여성 여부, 보유 인증, 수출 여부 등 체크한 항목), 필요한 지원, 담당자 성명, 연락처, 이메일</td></tr>
+              <tr><th>수집·이용 목적</th><td>지원금 해당 여부와 세금 환급(경정청구) 가능성 확인 결과 제공, 결과에 대한 문의 응대, 상담을 요청한 경우 상담 연락, 서비스 시험 운영과 개선</td></tr>
+              <tr><th>수집 항목</th><td>회사명, 사업자 구분, 사업장 주소(시도·시군구), 4대보험 가입자 수, 업종, 연 매출액, 개업 연월, 채용 계획, 채용일·월 급여·주 근로시간(입력한 경우), 회사 특성(대표자 청년·여성 여부, 보유 인증, 수출 여부 등 체크한 항목), 필요한 지원, 사업자등록번호(입력한 경우), 대표자 출생연도, 사업을 시작한 방법, 직원 수 증가 여부, 받은 세금 혜택, 작년에 낸 세금(입력한 경우), 세금 신고 방법, 이 페이지를 알게 된 경로, 담당자 성명, 연락처, 이메일</td></tr>
               <tr><th>보유·이용 기간</th><td><strong id="retention"></strong>. 기간이 지나거나 삭제를 요청하면 지체 없이 파기합니다.</td></tr>
               <tr><th>보관 위치</th><td>수집한 정보는 <span class="firm"></span>이(가) 관리하는 Google Drive(Google LLC의 클라우드, 국외 서버 포함)에 보관됩니다.</td></tr>
               <tr><th>동의 거부</th><td>동의를 거부할 수 있습니다. 거부하면 결과 확인 서비스를 이용할 수 없습니다.</td></tr>
@@ -233,12 +239,13 @@ footer p{margin:4px 0;max-width:90ch}
           </details>
         </div>
         <div class="consent">
-          <label><input type="checkbox" id="consent_marketing">[선택] 새 지원사업 안내 연락을 받겠습니다</label>
+          <label><input type="checkbox" id="consent_marketing">[선택] 새 지원사업과 세무·경정청구 서비스 안내를 받겠습니다</label>
           <details><summary>내용 보기</summary>
             <table>
-              <tr><th>목적</th><td>회사에 맞는 새 지원사업 공고와 신청 안내를 전화, 문자, 이메일로 제공</td></tr>
+              <tr><th>목적</th><td>회사에 맞는 새 지원사업 공고, 신청 안내와 <span class="firm"></span>의 세무·경정청구 서비스 안내를 전화, 문자, 이메일로 제공</td></tr>
               <tr><th>항목</th><td>회사명, 담당자 성명, 연락처, 이메일</td></tr>
               <tr><th>보유·이용 기간</th><td><strong id="mretention"></strong></td></tr>
+              <tr><th>수신 거부</th><td>안내를 그만 받고 싶으면 언제든 문의처로 알려 주세요. 바로 중단합니다. 오후 9시부터 다음 날 오전 8시 사이에는 보내지 않습니다.</td></tr>
               <tr><th>동의 거부</th><td>동의하지 않아도 결과 확인에는 아무 제한이 없습니다.</td></tr>
             </table>
           </details>
@@ -257,12 +264,14 @@ footer p{margin:4px 0;max-width:90ch}
       <ol class="steps">
         <li>왼쪽에 회사 기본자료와 담당자 정보를 입력합니다.</li>
         <li>개인정보 수집·이용에 동의하고 버튼을 누릅니다.</li>
-        <li>청년일자리도약장려금 요건별 판정과 회사 지역·업종에 맞는 공고가 이 자리에 나옵니다.</li>
+        <li>청년일자리도약장려금 요건별 판정, 돌려받을 수 있는 세금이 있는지, 회사 지역·업종에 맞는 공고가 이 자리에 나옵니다.</li>
       </ol>
       <p class="hint" style="margin-top:10px">입력하지 않아도 아래에서 지원금 설명과 지금 신청할 수 있는 지원사업을 둘러볼 수 있습니다.</p>
     </section>
     <p class="msg" id="sendMsg" role="status" hidden></p>
+    <p class="hint" id="refNote" hidden>이 결과는 입력한 내용만으로 미리 살펴본 참고용입니다. 지원금은 공고문과 운영기관 심사, 세금 환급은 신고서 검토로 최종 확정됩니다.</p>
     <div id="programs"></div>
+    <section class="panel" id="taxPanel" aria-label="세금 환급 가능성" hidden></section>
     <section class="panel" id="noticePanel" aria-label="우리 회사에 맞는 공고" hidden>
       <div class="listhead">
         <h2 id="nTitle">우리 회사에 맞는 공고</h2>
@@ -303,6 +312,8 @@ footer p{margin:4px 0;max-width:90ch}
 <script src="industry.js"></script>
 <script src="matcher.js"></script>
 <script src="formkit.js"></script>
+<script src="taxrules.js"></script>
+<script src="taxcheck.js"></script>
 <script>
 (function(){
 "use strict";
@@ -313,10 +324,12 @@ const ST={pass:"충족",fail:"미충족",check:"확인 필요",info:"참고"};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const val=id=>($("#"+id).value||"").trim();
-let unlocked=!CFG.REQUIRE_CONSENT_TO_VIEW,lastResult=null,needFilter=null,timer=null,sending=false;
+let unlocked=!CFG.REQUIRE_CONSENT_TO_VIEW,lastResult=null,lastTax=null,needFilter=null,timer=null,sending=false,consultSent=false;
+/* 주소 뒤에 ?src=이름 을 붙여 보내면 어디서 들어온 제출인지 시트에 남는다 (영문, 숫자, _ , - 만) */
+const SRC=((new URLSearchParams(location.search).get("src")||"").match(/^[A-Za-z0-9_-]{1,40}$/)||[""])[0];
 
 function readCompany(){
-  return {name:val("name"),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
+  return {name:val("name"),biz_no:val("biz_no"),...TAX.read(),biz_type:$("#bizC").checked?"법인":"개인",sido:val("sido"),sigungu:val("sigungu"),insured:val("insured"),
     ...INDUI.fields(),sales_manwon:val("sales_manwon"),founded:val("founded"),
     hire_date:val("hire_date"),hire_pay_manwon:val("hire_pay_manwon"),hire_hours:val("hire_hours"),traits:TR.read(),
     hire_plan:val("hire_plan"),hire_count:val("hire_count"),hire_youth:$("#hire_youth").checked,hire_regular:$("#hire_regular").checked,hire_hard:val("hire_hard"),
@@ -332,6 +345,7 @@ const INDUI=FK.initIndustry((M.INDUSTRY||{}).groups||[],(M.INDUSTRY||{}).year_la
 });
 const U5=FK.initUnder5(PROG0.under5_exceptions||[],PROG0.under5_none_label||"해당 없음",()=>INDUI.hint().f);
 const TR=FK.initTraits(RULES.traits||[]);
+const TAX=FK.initTax({askAgent:true});
 function showSalesText(){$("#salesText").textContent=FK.moneyText($("#sales_manwon").value)}
 
 function toggle(){
@@ -342,6 +356,7 @@ function toggle(){
 function showFormMsg(text,focusId){const m=$("#formMsg");m.textContent=text;m.hidden=!text;if(focusId)$("#"+focusId).focus()}
 function validate(){
   if(!val("name"))return showFormMsg("회사명을 입력해 주세요.","name"),false;
+  if(!FK.validBizNo(val("biz_no")))return showFormMsg("사업자등록번호를 다시 확인해 주세요. 모르면 비워 두어도 됩니다.","biz_no"),false;
   if(!val("sido"))return showFormMsg("사업장 주소의 시도를 선택해 주세요.","sido"),false;
   if(val("insured")==="")return showFormMsg("4대보험 가입자 수를 입력해 주세요. 없으면 0을 넣습니다.","insured"),false;
   if(U5.visible()&&!U5.anyChecked())return showFormMsg("직원이 5명 미만이면 해당하는 항목을 골라 주세요. 없으면 \"해당 없음\"을 고릅니다.","exc_none"),false;
@@ -356,10 +371,11 @@ function validate(){
 function run(){
   if(!unlocked)return;
   const c=readCompany();if(!c.sido||c.insured==="")return;
-  lastResult=M.evaluate(c);render();
+  lastResult=M.evaluate(c);lastTax=window.TaxCheck.diagnose(c);render();
 }
 function render(){
-  const r=lastResult;$("#intro").hidden=true;$("#noticePanel").hidden=false;
+  const r=lastResult;$("#intro").hidden=true;$("#noticePanel").hidden=false;$("#refNote").hidden=false;
+  renderTax();
   $("#programs").innerHTML=r.programs.map(p=>`
     <section class="panel">
       <div class="verdict"><h2>${esc(p.name)}</h2><span class="badge ${p.level}">${esc(p.verdict)}</span></div>
@@ -385,6 +401,28 @@ function render(){
       <div class="s">${esc(n.reasons.join(" / "))}</div>${sumHTML(n)}
     </div>`).join("")||'<p class="empty">조건에 맞는 진행 중 공고가 없습니다.</p>';
 }
+/* ---------- 세금 환급 가능성과 상담 요청 ---------- */
+function renderTax(){
+  const box=$("#taxPanel");if(!lastTax){box.hidden=true;return}
+  const cta=`<div class="money" style="margin-top:14px"><strong style="font-size:16px">${esc(CFG.FIRM_NAME||"")}에 검토를 맡겨 보세요</strong>
+      <p class="hint" style="margin-top:4px">신고서와 직원 자료를 보고 실제로 돌려받을 수 있는 금액을 확인해 드립니다. 지금 세무사 사무실이 있어도 검토만 따로 받아 볼 수 있습니다.</p>
+      <div class="sumlinks"><button type="button" class="primary" id="consultBtn" style="width:auto"${consultSent?" disabled":""}>${consultSent?"상담 요청이 접수되었습니다":"세금 환급 검토 상담 요청"}</button></div>
+      <p class="msg" id="consultMsg" role="status" hidden></p></div>`;
+  box.innerHTML=FK.taxHTML(lastTax,cta);box.hidden=false;
+}
+function taxSummaryText(d){return d.items.map(x=>x.title+": "+(window.TaxCheck.LEVEL_LABEL[x.level]||"")).join(" / ")}
+async function onConsult(){
+  if(sending||consultSent||!validate())return;
+  const c=readCompany(),r=M.evaluate(c),msg=$("#consultMsg"),p=buildSubmission(c,r);
+  p.consult_request=true;p.extra_text=["상담 요청: 세금 환급 검토",p.extra_text].filter(Boolean).join(" | ");
+  if(!CFG.SUBMIT_URL){msg.className="msg warn";msg.textContent="시험 모드라 상담 요청이 저장되지 않았습니다.";msg.hidden=false;return}
+  sending=true;$("#consultBtn").disabled=true;
+  const ok=await send(p);sending=false;
+  if(!ok){$("#consultBtn").disabled=false;msg.className="msg err";msg.textContent="요청을 보내지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.";msg.hidden=false;return}
+  consultSent=true;renderTax();
+  const m2=$("#consultMsg");m2.className="msg ok";m2.textContent="상담 요청이 접수되었습니다. 입력하신 연락처로 "+(CFG.FIRM_NAME||"담당자")+"에서 연락드리겠습니다.";m2.hidden=false;
+}
+
 /* 기업마당 사업개요를 읽기 쉽게 줄바꿈해서 보여준다 */
 function sumHTML(n){
   const ps=M.parseSummary(n.summary),rows=[];
@@ -444,14 +482,14 @@ function renderBrowse(){
 
 /* ---------- 제출: 구글 Apps Script 웹 앱으로 보내면 구글 드라이브의 시트와 백업 폴더에 저장된다 ---------- */
 function buildSubmission(c,r){
-  const p=r.programs[0]||{};
-  return {submission_id:"s_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),submitted_at:new Date().toISOString(),
+  const p=r.programs[0]||{},tx=window.TaxCheck.diagnose(c),inSheet=!!CFG.SHEET_HAS_TAX_COLUMNS;
+  return {source:SRC,consult_request:false,tax_summary:taxSummaryText(tx),tax_inputs_text:TAX.text(),submission_id:"s_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),submitted_at:new Date().toISOString(),
     page:location.origin+location.pathname,consent_version:CFG.CONSENT_VERSION||"",consent_required:true,consent_marketing:$("#consent_marketing").checked,
     company:c,contact:{name:val("contact_name"),phone:val("contact_phone"),email:val("contact_email")},
     result:{program:p.name||"",verdict:p.verdict||"",estimate_manwon:p.estimate?p.estimate.company_manwon:"",
       checks:(p.conditions||[]).filter(x=>x.status==="check"||x.status==="fail").map(x=>ST[x.status]+": "+x.label),
       matched:r.notices.length,top:r.notices.slice(0,5).map(n=>n.title)},
-    extra_text:[c.traits.length?"특성: "+c.traits.join(", "):"",c.hire_date?"채용일: "+c.hire_date:"",c.hire_pay_manwon?"월 급여: "+c.hire_pay_manwon+"만원":"",c.hire_hours?"주 "+c.hire_hours+"시간":""].filter(Boolean).join(" | "),
+    extra_text:[!inSheet&&SRC?"유입: "+SRC:"",inSheet?"":"세금 환급: "+taxSummaryText(tx),inSheet?"":TAX.text(),!inSheet&&c.biz_no?"사업자번호: "+c.biz_no:"",c.traits.length?"특성: "+c.traits.join(", "):"",c.hire_date?"채용일: "+c.hire_date:"",c.hire_pay_manwon?"월 급여: "+c.hire_pay_manwon+"만원":"",c.hire_hours?"주 "+c.hire_hours+"시간":""].filter(Boolean).join(" | "),
     data_collected_at:DATA.collected_at||""};
 }
 async function send(payload){
@@ -469,13 +507,13 @@ async function onSubmit(){
   if(val("website")){unlocked=true;run();return}           // 자동 입력 프로그램은 저장하지 않는다
   const c=readCompany(),r=M.evaluate(c),msg=$("#sendMsg"),btn=$("#submit");
   if(!CFG.SUBMIT_URL){
-    unlocked=true;lastResult=r;render();msg.className="msg warn";msg.textContent="시험 모드입니다. 저장소가 아직 연결되지 않아 입력 내용은 어디에도 저장되지 않았습니다.";msg.hidden=false;return;
+    unlocked=true;lastResult=r;lastTax=window.TaxCheck.diagnose(c);render();msg.className="msg warn";msg.textContent="시험 모드입니다. 저장소가 아직 연결되지 않아 입력 내용은 어디에도 저장되지 않았습니다.";msg.hidden=false;return;
   }
   sending=true;btn.disabled=true;btn.textContent="확인하는 중";
   const ok=await send(buildSubmission(c,r));
   sending=false;btn.disabled=false;btn.textContent="수정한 내용으로 다시 확인";
   if(!ok){msg.className="msg err";msg.textContent="제출하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.";msg.hidden=false;return}
-  unlocked=true;lastResult=r;render();
+  unlocked=true;lastResult=r;lastTax=window.TaxCheck.diagnose(c);render();
   msg.className="msg ok";msg.textContent="제출되었습니다. 아래에서 결과를 확인하세요. 입력값을 바꾸면 결과가 바로 바뀝니다.";msg.hidden=false;
   $("#programs").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
 }
@@ -502,6 +540,8 @@ $("#bSido").addEventListener("change",()=>{bSidoTouched=true;bShown=30;renderBro
 $("#bSearch").addEventListener("input",()=>{bShown=30;renderBrowse()});
 $("#bMore").addEventListener("click",()=>{bShown+=30;renderBrowse()});
 $("#contact_phone").addEventListener("input",e=>{e.target.value=M.formatPhone(e.target.value)});
+$("#biz_no").addEventListener("input",e=>{e.target.value=FK.formatBizNo(e.target.value)});
+$("#taxPanel").addEventListener("click",e=>{if(e.target.closest("#consultBtn"))onConsult()});
 $("#submit").addEventListener("click",onSubmit);
 toggle();renderEasy();renderBrowse();
 })();
