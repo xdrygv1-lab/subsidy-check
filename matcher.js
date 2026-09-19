@@ -277,7 +277,7 @@ function matchNotices(c,notices,needsDef,limit){
       }
     }
     /* 공고문을 직접 읽고 옮겨 둔 요건(rules/notice_facts.json)이 있는 공고: 회사의 매출, 직원 수, 개업 연월과 맞춰 본다. 모르는 값은 말하지 않는다 */
-    const fact=facts.find(f=>(f.ids||[]).includes(it.id)||((f.title_all||[]).length&&f.title_all.every(w=>title.includes(w))))||null;
+    const fact=facts.find(f=>(f.ids||[]).includes(it.id)||((f.title_all||[]).length&&f.title_all.every(w=>title.includes(w))&&!(f.title_none||[]).some(w=>title.includes(w))))||null;
     let factOut=null;
     if(fact){
       const {passed,failed,unknown,todo,softHits}=runChecks(fact.checks,c);
