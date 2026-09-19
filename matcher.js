@@ -66,9 +66,11 @@ function evalYouthLeap(prog,c,notices){
   else add("industry","pass","제외 업종 아님 (입력 기준)");
 
   const plan=c.hire_plan||"없음",hireN=Math.floor(num(c.hire_count,0)||0);let hireReady=false;
+  /* 명시적 null 은 «모름» 이다(사무실 자료에서 아직 확인하지 못한 값). 실패로 읽지 않고 확인 필요로 낸다. 빈 칸과 false 는 «아님» 그대로 */
+  const youthUnknown=c.hire_youth===null,regularUnknown=c.hire_regular===null;
   if(plan==="없음")add("hire","check","현재 채용 계획 없음. 청년 채용 전에 참여 신청을 해두면 됨");
-  else if(!c.hire_youth)add("hire","fail",`만 ${p.youth_age_min}~${p.youth_age_max}세 청년 채용이 아님`);
-  else if(!c.hire_regular)add("hire","fail","정규직 채용이 아님 (3개월 이하 계약직 후 정규직 전환은 가능)");
+  else if(!c.hire_youth&&!youthUnknown)add("hire","fail",`만 ${p.youth_age_min}~${p.youth_age_max}세 청년 채용이 아님`);
+  else if(!c.hire_regular&&!regularUnknown)add("hire","fail","정규직 채용이 아님 (3개월 이하 계약직 후 정규직 전환은 가능)");
   else if(capital&&c.hire_hard==="no")add("hire","fail","수도권은 취업애로청년 채용만 지원");
   else{
     hireReady=true;const msgs=[];
@@ -79,9 +81,13 @@ function evalYouthLeap(prog,c,notices){
       else msgs.push(`참여 신청 기한은 ${limit} (D-${left}). 채용일로부터 ${p.hire_before_apply_months}개월 안에 신청해야 함`);
     }else if(plan==="최근3개월")msgs.push(`이미 채용했다면 채용일로부터 ${p.hire_before_apply_months}개월 안에 참여 신청해야 함`);
     else if(c.hire_date)msgs.push(`채용 예정일 ${c.hire_date}. 그 전에 참여 신청을 해 두어야 함`);
-    if(!hireReady){}
-    else if(capital&&c.hire_hard!=="yes"){msgs.push("수도권은 취업애로청년 요건(10개 중 1개) 확인 필요");add("hire","check",msgs.join(". "))}
-    else add("hire","pass",msgs.join(". ")||"청년 정규직 채용 예정");
+    if(hireReady){
+      let needCheck=false;
+      const unknown=[[`만 ${p.youth_age_min}~${p.youth_age_max}세 청년인지`,youthUnknown],["정규직인지",regularUnknown]].filter(x=>x[1]).map(x=>x[0]);
+      if(unknown.length){msgs.push("채용한 직원이 "+unknown.join(", ")+" 확인 필요");needCheck=true}
+      if(capital&&c.hire_hard!=="yes"){msgs.push("수도권은 취업애로청년 요건(10개 중 1개) 확인 필요");needCheck=true}
+      add("hire",needCheck?"check":"pass",msgs.join(". ")||"청년 정규직 채용 예정");
+    }
   }
   const pay=num(c.hire_pay_manwon),hours=num(c.hire_hours),workBase=`주 ${p.weekly_hours_min}시간 이상, 평균 월 급여 ${p.avg_monthly_pay_max_manwon}만원 이하, 고용보험 가입`;
   if(plan==="없음"||(pay===null&&hours===null))add("work","info",workBase);
