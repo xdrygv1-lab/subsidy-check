@@ -153,7 +153,7 @@ function parseSummary(s){
     const segs=p.split("※").map(x=>x.trim()).filter(Boolean),main=segs.shift()||"";
     const hint=segs.join(" ");
     const notes=segs.filter(x=>!/^자세한 .{0,12}공고문 ?참조\.?$/.test(x));
-    const lines=main.replace(/([가-힣\)\.\]])\s?-\s+(?=\S)/g,"$1\n").split("\n").map(x=>x.trim()).filter(Boolean);
+    const lines=main.replace(/([\uAC00-\uD7A3\)\.\]])\s?-\s+(?=\S)/g,"$1\n").split("\n").map(x=>x.trim()).filter(Boolean);
     let label=null;
     if(/지원대상|신청자격|참여대상|모집대상/.test(hint))label="지원 대상";
     else if(/지원내용|지원사항|지원규모/.test(hint))label="지원 내용";
