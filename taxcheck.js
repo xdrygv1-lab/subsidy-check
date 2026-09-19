@@ -174,7 +174,12 @@ function smeSpecial(c,T,ksics,reg,reliefs,taxAmt){
   item.headline=taxName+"의 "+rate+"%를 해마다 감면받을 가능성이 있습니다 (한도 연 "+man(P.cap_manwon)+"원)";
   if(taxAmt!==null&&taxAmt>0)item.estimate="작년에 낸 세금이 "+man(taxAmt)+"원이라면 1년에 약 "+man(Math.min(taxAmt*rate/100,P.cap_manwon))+"원";
   item.points.push("소기업 감면율은 도소매·의료업 "+P.rates.wholesale_retail_medical+"%, 그 밖의 업종은 수도권 "+P.rates.capital+"%, 수도권 밖 "+P.rates.non_capital+"%입니다");
-  if(!smallSure)item.points.push("매출이 "+man(P.small_company_safe_sales_manwon)+"원을 넘으면 업종별 소기업 기준을 따로 봐야 하고, 기준을 넘으면 감면율이 낮아지거나 대상에서 빠질 수 있습니다");
+  if(!smallSure){
+    const thr=hit(ksics[0]||"",P.small_company_sales_eok);
+    if(sales!==null&&thr!==null&&sales<=thr*10000)item.points.push("지금 기준으로 이 업종의 소기업 매출 기준("+thr+"억원) 안에 있습니다. 과거 연도는 기준이 달라 해마다 확인합니다");
+    else if(sales!==null&&thr!==null)item.points.push("매출이 지금의 소기업 기준("+thr+"억원)을 넘어 중기업일 수 있습니다. 중기업은 감면율이 낮고 수도권에서는 대부분 대상이 아닙니다");
+    else item.points.push("매출이 "+man(P.small_company_safe_sales_manwon)+"원을 넘으면 업종별 소기업 기준을 따로 봐야 하고, 기준을 넘으면 감면율이 낮아지거나 대상에서 빠질 수 있습니다");
+  }
   if(cls.state==="check")item.points.push("업종 확인 필요: "+cls.name);
   item.points.push("창업중소기업 세액감면과는 함께 받을 수 없어 둘 중 유리한 쪽을 고릅니다");
   item.points.push("대부분의 세무대리인이 기본으로 적용하지만 직접 신고했거나 업종이 바뀐 해에는 빠지는 일이 있습니다");
