@@ -130,13 +130,17 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   }
   const by=num(c.ceo_birth_year),age=by===null?null:fy-by;
   let youth=age===null?"unknown":(age<=S.youth_age_max?"yes":(age<=S.youth_age_max+S.military_years_max+1?"maybe":"no"));
-  /* 출생연도가 없고 사무실 자료의 나이 표시만 있을 때: le34 = 표시를 만든 해에 만 34세 이하, 35to39 = 만 35~39세.
-     지금 34세 이하면 창업 당시에도 34세 이하다. 35~39세면 창업이 5년 넘게 전일 때만 확실히 청년이고 나머지는 확인이 필요하다 */
+  /* 출생연도가 없고 사무실 자료의 나이 표시만 있을 때: le34 = 표시를 만든 날에 만 34세 이하, 35to39 = 만 35~39세 (만 나이, 연 나이 아님).
+     지금 34세 이하면 창업 당시에도 34세 이하다. 35~39세면 개업한 달부터 표시를 만든 달까지 꽉 찬 햇수만큼만 나이를 거슬러,
+     창업 때 가장 많았을 나이가 34세 이하일 때만 청년으로 보고 나머지는 확인이 필요하다. 개업일의 날짜는 모르므로 한 달을 더 빼 보수적으로 센다 */
   let usedBand=false;
   if(age===null&&c.ceo_age_band){
-    const bandYear=num(c.ceo_age_band_year)||fy;
+    const re2=/^(\d{4})[-./]?(\d{1,2})?/,bm=re2.exec(String(c.ceo_age_band_ym||c.ceo_age_band_year||"")),fm=re2.exec(String(c.founded||""));
+    const bandMonths=bm?(+bm[1])*12+(+(bm[2]||1)):null;                 /* 달을 모르면 1월로 보아 거스르는 햇수를 줄인다 */
+    const foundMonths=fy*12+(+((fm&&fm[2])||12));                       /* 개업한 달을 모르면 12월로 본다 */
+    const fullYears=bandMonths===null?0:Math.max(0,Math.floor((bandMonths-foundMonths-1)/12));
     if(c.ceo_age_band==="le34"){youth="yes";usedBand=true}
-    else if(c.ceo_age_band==="35to39"){youth=(39-(bandYear-fy)<=S.youth_age_max)?"yes":"maybe";usedBand=true}
+    else if(c.ceo_age_band==="35to39"){youth=(39-fullYears<=S.youth_age_max)?"yes":"maybe";usedBand=true}
   }
   const rates=startupRates(reg,fy>=2026),sales=num(c.sales_manwon),small=sales!==null&&sales<=S.small_revenue_manwon;
   let rate=null,usedSmall=false;
