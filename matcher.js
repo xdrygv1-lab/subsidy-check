@@ -40,7 +40,11 @@ function evalYouthLeap(prog,c,notices){
   const noneLabel=prog.under5_none_label||"해당 없음",excNone=!!flags.exceptions_none||(flags.exceptions||[]).includes(noneLabel);
   const iflags=flagsOf(c),knowledge=iflags.includes("K")?(c.industry_text||(infoOf(c)||{}).n||"선택한 종목"):null;
   const chosen=(flags.exceptions||[]).filter(k=>excLabels[k]).map(k=>excLabels[k]);
-  if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명`);
+  const lowN=num(c.insured_low),highN=num(c.insured_high);
+  /* 직원 수를 세는 자료(원천세 인원, 사원 목록)에 따라 5명 경계가 갈리는 곳은 단정하지 않는다 */
+  if((n>=p.min_insured&&lowN!==null&&lowN<p.min_insured)||(n<p.min_insured&&highN!==null&&highN>=p.min_insured))
+    add("insured","check",`${n}명으로 셌지만 다른 자료로는 ${n>=p.min_insured?lowN:highN}명이라 ${p.min_insured}명 경계가 갈림. 고용보험 가입자 수를 확인`);
+  else if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명`);
   else if(n>=p.min_insured_exception){
     if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
@@ -156,8 +160,10 @@ function factCheck(ck,c){
     let n=num(c.insured);if(n===null)return null;
     const n0=n;
     if(ck.exclude_hired_since){const cnt=(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length;n-=ck.exclude_max?Math.min(cnt,ck.exclude_max):cnt}   /* 공고문이 «지원 대상 새 직원은 상시근로자 수에서 뺀다» 고 한 경우. 지원 대상이 되는 수까지만 뺀다 */
-    const lim=SMALL10.has(sectionOf(c))?10:5,low=num(c.insured_low);   /* 직원 수를 달리 세면 나오는 더 작은 값. 그 값으로는 결과가 달라지면 단정하지 않는다 */
-    if(low!==null&&((low-(n0-n))<lim)!==(n<lim))return null;
+    const lim=SMALL10.has(sectionOf(c))?10:5;
+    for(const alt of [num(c.insured_low),num(c.insured_high)]){   /* 직원 수를 달리 세면 나오는 더 작은 값과 더 큰 값(사원 목록과 원천세 인원이 다른 곳 등). 그 값으로는 결과가 달라지면 단정하지 않는다 */
+      if(alt!==null&&((alt-(n0-n))<lim)!==(n<lim))return null;
+    }
     return n<lim;
   }
   if(t==="hired_since"){   /* 그 날짜(부터 until 까지)에 새로 뽑아 지금도 일하는 직원이 있는가. hire_dates_on 이 없으면 입력한 채용일 1건으로 보고, 그것도 없으면 모름 */
@@ -171,8 +177,9 @@ function factCheck(ck,c){
   }
   if(t==="insured_gte"){
     if((ck.unless_traits||[]).some(x=>(c.traits||[]).includes(x)))return true;   /* 인원 요건의 예외(벤처·이노비즈·사회적기업 등)로 입력된 회사 */
-    const n=num(c.insured),low=num(c.insured_low);
+    const n=num(c.insured),low=num(c.insured_low),high=num(c.insured_high);
     if(n!==null&&n>=ck.n)return (low!==null&&low<ck.n)?null:true;   /* 달리 세면 경계 아래로 내려가는 곳은 단정하지 않는다 */
+    if(n!==null&&high!==null&&high>=ck.n)return null;   /* 달리 세면 경계 위로 올라가는 곳(원천세 인원은 4명인데 사원 목록은 5명 등)도 단정하지 않는다 */
     if((ck.unless_industry_flags||[]).some(f=>flagsOf(c).includes(f)))return {k:"maybe",v:null};   /* 업종 표시(K 지식서비스산업 등)는 참고용 어림이라 예외에 든다고 단정하지 않는다: «확인할 것» */
     return n===null?null:false;
   }
