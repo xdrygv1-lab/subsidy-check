@@ -121,7 +121,9 @@ details a{font-weight:500;color:var(--accent);text-decoration:none}
 .facts{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--field);font-size:13.5px}
 .notice details.same{margin-top:6px;font-size:13px} .notice details.same summary{cursor:pointer;color:var(--sub)} .notice details.same ul{margin:4px 0 0;padding-left:18px}
 .facts .subs{margin-top:8px;display:flex;flex-direction:column;gap:6px} .facts .sub{padding-top:6px;border-top:1px solid var(--line)} .facts .sub b{margin-right:4px}
-.facts ul{margin:6px 0 0;padding-left:18px} .facts details{margin-top:6px} .facts summary{cursor:pointer;color:var(--accent);font-weight:600} .facts p{margin:6px 0 0}
+.facts ul{margin:6px 0 0;padding-left:18px} .facts details{margin-top:6px}
+/* 요건 밑에 붙는 «우리 회사 값». 무엇을 보고 그렇게 나왔는지 바로 보이게 한 줄 아래에 흐리게 */
+.facts .evv{display:block;margin-top:2px;color:var(--muted);font-size:12.5px} .facts summary{cursor:pointer;color:var(--accent);font-weight:600} .facts p{margin:6px 0 0}
 .tag.ease-hard{background:var(--no-bg);color:var(--no);font-weight:700} .tag.ease-unknown{background:transparent;border:1px solid var(--line);color:var(--sub)}
 .listhead{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
 .empty{color:var(--sub);padding:28px 0;text-align:center;margin:0}
@@ -585,9 +587,13 @@ function render(){
 /* 공고문을 직접 읽고 옮겨 둔 요건이 있는 공고: 지원 내용과, 입력한 값으로 가려 본 요건을 보여 준다. 가리는 일은 matcher 가 했다 */
 function factsHTML(f){
   const li=(arr,mark)=>arr.map(x=>`<li>${mark} ${esc(x)}</li>`).join("");
+  /* 요건 한 줄마다 입력한 값을 같이 보여 준다. 왜 그렇게 나왔는지 보여야 틀린 곳을 바로 고치실 수 있다 */
+  const MARK={yes:"맞음:",no:"안 맞음:",todo:"이렇게 하면:",check:"확인할 것:"};
+  const ev=(f.evidence||[]).filter(e=>e.text);
+  const evList=ev.map(e=>`<li>${MARK[e.result]||""} ${esc(e.text)}${e.value?`<span class="evv">${esc(e.value)}</span>`:""}</li>`).join("");
   return `<div class="facts"><strong>${esc(f.benefit||"")}</strong>
     ${f.status==="info"?`<p class="hint">공고문에서 옮긴 지원 내용입니다. 입력한 값으로 미리 가려 볼 숫자 요건은 없는 사업이라, 아래 주의할 점을 보고 판단하세요.</p>`:""}
-    <ul>${li(f.passed||[],"맞음:")}${li(f.failed||[],"안 맞음:")}${li(f.todo||[],"이렇게 하면:")}${li(f.unknown||[],"확인할 것:")}</ul>
+    <ul>${evList||(li(f.passed||[],"맞음:")+li(f.failed||[],"안 맞음:")+li(f.todo||[],"이렇게 하면:")+li(f.unknown||[],"확인할 것:"))}</ul>
     ${(f.sub||[]).length?`<div class="subs"><strong>자금별로 보면</strong>${f.sub.map(s=>`<div class="sub"><span class="tag ${s.status==="yes"?"ease-easy":s.status==="no"?"ease-hard":"ease-mid"}">${({yes:"맞을 가능성",check:"확인 필요",todo:"조건이 되면",no:"안 맞음",info:"따로 가릴 요건 없음"})[s.status]}</span><b>${esc(s.name)}</b> ${esc(s.benefit||"")}<div class="s">${esc([].concat(s.passed||[],s.failed||[],s.todo||[],s.unknown||[]).join(" / "))}</div></div>`).join("")}</div>`:""}
     <details><summary>신청 방법과 주의할 점</summary><p>${esc(f.how||"")}</p><ul>${(f.notes||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="hint">${esc(f.verified||"")}</p></details></div>`;
 }

@@ -252,18 +252,103 @@ function factCheck(ck,c){
   }
   return null;   /* need_data 를 비롯해 모르는 종류는 늘 «확인할 것» */
 }
-/* 요건 묶음을 돌려 맞음, 안 맞음, 확인할 것, 이렇게 하면 글 목록을 낸다 */
+function evNum(v){return v===null||v===undefined?"":Math.floor(v+0.5).toLocaleString("en-US")}
+/* 요건 하나에 대고 «우리 회사 값» 한 줄을 만든다. 판정이 아니라 무엇을 보고 그렇게 봤는지 보여 주는 글이다 */
+function factEvidence(ck,c){
+  const t=(ck||{}).type,sales=num(c.sales_manwon);
+  if(t==="sales_gt0"||t==="sales_lt"||t==="sales_lte"){
+    if(sales===null)return "우리 매출: 모름";
+    const v=ck.vat_included?sales*1.1:sales;
+    let s="우리 매출 "+evNum(sales)+"만원";
+    if(ck.vat_included)s+=" (부가세 포함 "+evNum(v)+"만원)";
+    const months=num(c.sales_months);
+    if(months!==null&&months>0&&months<12)s+=", "+Math.trunc(months)+"개월치라 12개월로 환산하면 "+evNum(v/months*12)+"만원";
+    if(t!=="sales_gt0"&&ck.manwon!==undefined&&ck.manwon!==null)s+=" / 기준 "+evNum(ck.manwon)+"만원";
+    return s;
+  }
+  if(t==="small_biz"||t==="insured_lt"||t==="insured_gte"){
+    const n=num(c.insured),low=num(c.insured_low),high=num(c.insured_high);
+    let s=n===null?"우리 직원 수: 모름":"우리 직원 "+Math.trunc(n)+"명";
+    if(low!==null&&(n===null||Math.trunc(low)!==Math.trunc(n)))s+=", 작게 세면 "+Math.trunc(low)+"명";
+    if(high!==null&&(n===null||Math.trunc(high)!==Math.trunc(n)))s+=", 크게 세면 "+Math.trunc(high)+"명";
+    if(t==="small_biz"){
+      const lim=SMALL10.has(sectionOf(c))?10:5;
+      if(ck.exclude_hired_since)s+=" (새로 뽑은 "+(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length+"명은 빼고 셈)";
+      s+=" / 기준 "+lim+"명 미만";
+    }else if(ck.n!==undefined&&ck.n!==null)s+=" / 기준 "+ck.n+"명 "+(t==="insured_gte"?"이상":"미만");
+    return s;
+  }
+  if(t==="hired_since"){
+    if(c.hire_dates_on===undefined||c.hire_dates_on===null){
+      const d=String(c.hire_date||"");
+      return d?"입력한 채용일 "+d:"우리 채용일 자료: 없음";
+    }
+    const until=ck.until||"9999-12-31";
+    const hit=c.hire_dates_on.map(String).filter(x=>ck.date<=x&&x<=until).sort();
+    return "지금 일하는 직원의 채용일 "+c.hire_dates_on.length+"건 가운데 "+ck.date+" 뒤 "+hit.length+"건"+(hit.length?" (가장 최근 "+hit[hit.length-1]+")":"");
+  }
+  if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return (sg?"우리 시군구 "+sg:"우리 시군구: 모름")+" / 기준 "+ck.value}
+  if(t==="founded_by"||t==="months_lt"||t==="months_gte"){
+    const fd=String(c.founded||"");
+    if(!fd)return "우리 개업 연월: 모름";
+    const ms=monthsSince(c.founded);
+    let s="우리 개업 "+fd.slice(0,7);
+    if(ms!==null)s+=" (업력 "+ms+"개월, 약 "+Math.floor(ms/12)+"년)";
+    if(t==="founded_by")return s+" / 기준 "+ck.ym+" 이전";
+    return s+" / 기준 "+ck.n+"개월 "+(t==="months_lt"?"미만":"이상");
+  }
+  if(t==="ceo_age_lte"){
+    const tail=" / 기준 "+ck.n+"세 이하",by=num(c.ceo_birth_year);
+    if(by!==null)return "우리 대표 "+Math.trunc(by)+"년생 (연 나이 "+(+todayISO().slice(0,4)-Math.trunc(by))+"세)"+tail;
+    if(c.ceo_age_band==="le34")return "우리 대표 34세 이하 표시"+tail;
+    if(c.ceo_age_band==="35to39")return "우리 대표 35~39세 표시"+tail;
+    return "우리 대표 나이: 모름"+tail;
+  }
+  if(t==="section_in"){const sec=sectionOf(c);return (sec?"우리 업종 대분류 "+sec:"우리 업종: 모름")+" / 기준 "+(ck.sections||[]).join(", ")}
+  if(t==="youth_hire_1y"){
+    const td=todayISO(),since=(+td.slice(0,4)-1)+td.slice(4),youth=c.youth_hire_dates_on,allh=c.hire_dates_on;
+    if(youth===undefined||youth===null||allh===undefined||allh===null)return "우리 채용 자료: 없음";
+    return "최근 1년 채용 "+allh.filter(d=>String(d)>=since).length+"건, 그 가운데 청년(34세 이하) 표시 "+youth.filter(d=>String(d)>=since).length+"건";
+  }
+  if(t==="sales_half_drop"){
+    const h=num(c[ck.half_field]);
+    if(sales===null||h===null||sales<=0)return "우리 상반기 매출이나 전년 매출: 모름";
+    return "우리 상반기 "+evNum(h)+"만원, 두 배 하면 전년 "+evNum(sales)+"만원의 "+(h*2/sales).toFixed(2)+"배 / 기준 "+ck.ratio+"배 이하";
+  }
+  if(t==="trait")return "우리 회사 특성에 «"+ck.label+"» "+((c.traits||[]).includes(ck.label)?"있음":"없음(아직 입력 안 했을 수도 있음)");
+  if(t==="youth_majority"){
+    const on=c.hire_dates_on,youth=c.youth_hire_dates_on;
+    if(on===undefined||on===null||youth===undefined||youth===null)return "우리 직원 자료: 없음";
+    return "지금 일하는 직원 "+on.length+"명 가운데 청년(34세 이하) 표시 "+youth.length+"명";
+  }
+  if(t==="graduate_candidate"){
+    const n=num(c.insured),lim=SMALL10.has(sectionOf(c))?10:5,ks=ksicsOf(c);
+    const eok=ck.small_company_sales_eok||{},ratio=ck.ratio===undefined?0.3:ck.ratio;
+    const key=Object.keys(eok).sort((a,b)=>b.length-a.length).find(k=>ks.some(x=>x.startsWith(k)));
+    let s=sales===null?"우리 매출: 모름":"우리 매출 "+evNum(sales)+"만원";
+    if(key!==undefined)s+=" / 업종 소기업 기준 "+eok[key]+"억원의 "+Math.floor(ratio*100)+"%인 "+evNum(eok[key]*10000*ratio)+"만원 이상";
+    return s+" / 우리 직원 "+(n===null?"모름":Math.trunc(n)+"명")+", "+(lim-2)+"~"+(lim-1)+"명이어야 함";
+  }
+  if(t==="own_product"){const v=String(c.own_product||"");return "설문 답: "+(v==="yes"?"자기 상품 있음":v==="no"?"자기 상품 없음":"아직 답 없음")}
+  if(t==="ksic_not"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 제외 "+(ck.ksic||[]).join(", ")}
+  if(t==="not")return factEvidence(ck.check||{},c);
+  if(t==="any_of"||t==="all_of")return (ck.checks||[]).map(x=>factEvidence(x,c)).filter(x=>x).join(" · ");
+  return "";   /* need_data 처럼 회사 값으로 가릴 수 없는 요건: 사람이 확인할 것 */
+}
+/* 요건 묶음을 돌려 맞음, 안 맞음, 확인할 것, 이렇게 하면 글 목록을 낸다. evidence 는 요건마다 «우리 회사 값» 을 붙인 것 */
 function runChecks(checks,c){
-  const passed=[],failed=[],unknown=[],todo=[],softHits=[];
+  const passed=[],failed=[],unknown=[],todo=[],softHits=[],evidence=[];
+  const note=(text,result,ck)=>evidence.push({text,result,value:factEvidence(ck,c)});
   for(const ck of checks||[]){
     const res=factCheck(ck,c);
     if(res&&typeof res==="object"){   /* 단정할 수 없는 까닭이 있는 경우(예외 업종일 수 있음, 부분연도, 기준선 근처 등): 까닭을 글에 붙여 «확인할 것» 으로 */
-      const text=ck[res.k+"_text"]||(ck.text+((RULES.notice_fact_texts||{})[res.k]||""));
-      unknown.push(text.split("{v}").join(res.v===null||res.v===undefined?"":Math.floor(res.v+0.5).toLocaleString("en-US")));continue}
-    if(res===false&&ck.soft){todo.push(ck.soft_text||ck.text);if(ck.soft_flag)softHits.push([ck.soft_flag,ck.soft_penalty||0])}   /* 안 맞아도 탈락이 아닌 요건: «하면 받을 수 있는 것» 으로 두고, 표시와 감점이 적혀 있으면 모은다 */
-    else (res===true?passed:res===false?failed:unknown).push(ck.text);
+      const base=ck[res.k+"_text"]||(ck.text+((RULES.notice_fact_texts||{})[res.k]||""));
+      const text=base.split("{v}").join(res.v===null||res.v===undefined?"":Math.floor(res.v+0.5).toLocaleString("en-US"));
+      unknown.push(text);note(text,"check",ck);continue}
+    if(res===false&&ck.soft){const text=ck.soft_text||ck.text;todo.push(text);note(text,"todo",ck);if(ck.soft_flag)softHits.push([ck.soft_flag,ck.soft_penalty||0])}   /* 안 맞아도 탈락이 아닌 요건: «하면 받을 수 있는 것» 으로 두고, 표시와 감점이 적혀 있으면 모은다 */
+    else {(res===true?passed:res===false?failed:unknown).push(ck.text);note(ck.text,res===true?"yes":res===false?"no":"check",ck)}
   }
-  return {passed,failed,unknown,todo,softHits};
+  return {passed,failed,unknown,todo,softHits,evidence};
 }
 function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
@@ -350,16 +435,17 @@ function matchNotices(c,notices,needsDef,limit){
     const fact=facts.find(f=>(f.ids||[]).includes(it.id)||((f.title_all||[]).length&&f.title_all.every(w=>title.includes(w))&&!(f.title_none||[]).some(w=>title.includes(w))))||null;
     let factOut=null;
     if(fact){
-      const {passed,failed,unknown,todo,softHits}=runChecks(fact.checks,c);
+      const {passed,failed,unknown,todo,softHits,evidence}=runChecks(fact.checks,c);
       if(fact.flag){score-=fact.flag_penalty||0;flags.push(fact.flag)}   /* 받은 곳만 신청할 수 있는 사업처럼 공고 자체에 붙는 표시 */
       for(const [flagText,pen] of softHits){score-=pen;flags.push(flagText)}   /* 예외에 들 때만 되는 요건(직원 10명 이상 등): 탈락이라 단정하지 않되 표시를 달고 뒤로 보낸다 */
       /* 한 공고 안의 세부 사업(자금)마다 따로 가린다. 점수에는 넣지 않고 보여 주기만 한다 */
       const sub=(fact.sub||[]).map(sp=>{const r=runChecks(sp.checks,c);
-        return {name:sp.name,benefit:sp.benefit||null,status:!(r.passed.length||r.failed.length||r.unknown.length||r.todo.length)?"info":(r.failed.length?"no":(r.unknown.length?"check":(r.todo.length?"todo":"yes"))),passed:r.passed,failed:r.failed,unknown:r.unknown,todo:r.todo}});
+        return {name:sp.name,benefit:sp.benefit||null,status:!(r.passed.length||r.failed.length||r.unknown.length||r.todo.length)?"info":(r.failed.length?"no":(r.unknown.length?"check":(r.todo.length?"todo":"yes"))),passed:r.passed,failed:r.failed,unknown:r.unknown,todo:r.todo,evidence:r.evidence}});
       score+=3*passed.length-8*failed.length;
       if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
       if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
-      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo,sub,
+      /* evidence = 요건 한 줄마다 «우리 회사 값» 을 붙인 목록. 사람이 근거를 바로 짚기 위한 것이라 점수에는 넣지 않는다 */
+      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo,sub,evidence,
         /* 받는 쪽이 목록 길이로 짐작하지 않게 판정기가 직접 매긴다. info = 맞춰 본 요건이 없어 지원 내용만 보여 주는 공고 */
         status:(!(passed.length||failed.length||unknown.length||todo.length))?"info":failed.length?"no":unknown.length?"check":todo.length?"todo":"yes"};
     }
