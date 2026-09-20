@@ -44,7 +44,7 @@ function evalYouthLeap(prog,c,notices){
   /* 직원 수를 세는 자료(원천세 인원, 사원 목록)에 따라 5명 경계가 갈리는 곳은 단정하지 않는다 */
   if((n>=p.min_insured&&lowN!==null&&lowN<p.min_insured)||(n<p.min_insured&&highN!==null&&highN>=p.min_insured))
     add("insured","check",`${n}명으로 셌지만 다른 자료로는 ${n>=p.min_insured?lowN:highN}명이라 ${p.min_insured}명 경계가 갈림. 고용보험 가입자 수를 확인`);
-  else if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명`);
+  else if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명 (지침의 기준은 신청 직전 달부터 1년간 평균이라 그 값으로는 달라질 수 있음)`);
   else if(n>=p.min_insured_exception){
     if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
@@ -60,7 +60,7 @@ function evalYouthLeap(prog,c,notices){
   const sales=num(c.sales_manwon),need=n*p.sales_per_insured_manwon,age=monthsSince(c.founded);
   if(age!==null&&age<12)add("sales","pass","업력 1년 미만으로 매출액 심사 제외");
   else if(sales===null)add("sales","check",`직전연도 매출이 ${won(need)}만원 이상인지 확인 (가입자 ${n}명 x ${won(p.sales_per_insured_manwon)}만원)`);
-  else if(sales>=need)add("sales","pass",`직전연도 매출 ${won(sales)}만원 >= 기준 ${won(need)}만원`);
+  else if(sales>=need)add("sales","pass",`매출 ${won(sales)}만원 >= 기준 ${won(need)}만원 (2024년과 2025년 중 유리한 해로 낼 수 있음)`);
   else add("sales","fail",`직전연도 매출 ${won(sales)}만원 < 기준 ${won(need)}만원`);
 
   const text=c.industry_text||"",liquor=iflags.includes("L"),indirect=iflags.includes("I")||INDIRECT_WORDS.some(w=>text.includes(w));
@@ -124,11 +124,11 @@ function evalYouthLeap(prog,c,notices){
   else if(hireReady){verdict="대상일 가능성 있음 (확인 항목 있음)";level="maybe"}
   else{verdict="청년 채용 시 활용 가능";level="maybe"}
 
-  const cap=Math.max(1,Math.floor(n*p.cap_ratio));let estimate=null;
+  const cap=Math.max(1,Math.ceil(n*p.cap_ratio));let estimate=null;   /* 지침 42쪽: 기준 피보험자 수에 50%를 곱하고 소수점 이하는 올림(9명 -> 5명) */
   if(level!=="no"){
     const heads=hireN?Math.min(hireN,cap):1;
     estimate={heads,cap,company_manwon:heads*p.company_subsidy_manwon,
-      note:`청년 1인당 최대 ${p.company_subsidy_manwon}만원, 지원한도 약 ${cap}명(기준 피보험자 수의 ${Math.round(p.cap_ratio*100)}%). 한도 세부 산정은 운영기관 확인`};
+      note:`청년 1인당 최대 ${p.company_subsidy_manwon}만원, 지원한도 약 ${cap}명(기준 피보험자 수의 ${Math.round(p.cap_ratio*100)}%, 소수점 올림). 기준 피보험자 수는 신청 직전 달부터 1년간 평균이라 지금 직원 수와 다를 수 있고, 한도 세부 산정은 운영기관이 확인한다`};
     if(!capital)estimate.youth_note="채용된 청년 본인에게도 2년간 480만~720만원 근속 인센티브 (지역 구분에 따라 다름)";
   }
   const today=todayISO(),mine=(c.sigungu||"").split(/\s+/).filter(w=>w.length>=2),related=[];
