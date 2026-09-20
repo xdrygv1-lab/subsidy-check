@@ -84,14 +84,18 @@ footer a{color:inherit}
     <div class="q"><div class="qt"><span class="qn">5</span><span>회사가 가지고 있는 것에 표시해 주세요</span></div>
       <p class="hint">없으면 건너뛰어도 됩니다.</p><div class="opts" id="certs"></div></div>
 
-    <div class="q"><div class="qt"><span class="qn">6</span><span>어떻게 받으시겠어요?</span></div>
+    <div class="q"><div class="qt"><span class="qn">6</span><span>온라인으로 팔 수 있는 자기 상품이 있으세요?</span></div>
+      <p class="hint">직접 만들거나 주문 제작(OEM)해서 파는 상품을 말합니다. 온라인몰 입점이나 기획전 지원사업을 알려 드릴 때 씁니다.</p>
+      <div class="opts" id="own_product"></div></div>
+
+    <div class="q"><div class="qt"><span class="qn">7</span><span>어떻게 받으시겠어요?</span></div>
       <div class="opts" id="how"></div>
       <div class="two">
         <div class="fld"><label for="phone_confirm">받을 휴대폰 번호</label><input type="tel" id="phone_confirm" placeholder="사무실에 등록된 번호와 다를 때만" maxlength="20" autocomplete="tel"></div>
         <div class="fld"><label for="email_confirm">받을 이메일</label><input type="email" id="email_confirm" placeholder="사무실에 등록된 주소와 다를 때만" maxlength="80" autocomplete="email"></div>
       </div></div>
 
-    <div class="q"><div class="qt"><span class="qn">7</span><span>얼마나 자주 받으시겠어요?</span></div>
+    <div class="q"><div class="qt"><span class="qn">8</span><span>얼마나 자주 받으시겠어요?</span></div>
       <div class="opts" id="freq"></div></div>
 
     <div class="q">
@@ -131,6 +135,7 @@ pills("hire_plan","radio",[["3m","3개월 안에"],["6m","6개월 안에"],["12m
 pills("recent","radio",[["yes","최근 3개월 안에 뽑았다"],["no","없다"]]);
 /* 대표자 나이·성별은 묻지 않는다(사무실 자료로 안에서만 계산). 인증과 시설만 묻는다 */
 pills("certs","checkbox",R.traits.map(t=>t.label).filter(l=>!/대표/.test(l)).map(l=>[l,l]));
+pills("own_product","radio",[["yes","있다"],["no","없다"],["unknown","잘 모르겠다"]]);
 pills("how","checkbox",[["sms","문자"],["kakao","카카오톡"],["email","이메일"]]);
 pills("freq","radio",[["each","맞는 공고가 나올 때마다"],["weekly","일주일에 한 번 모아서"],["monthly","한 달에 한 번 모아서"]]);
 const picked=id=>[...document.querySelectorAll(`#${id} input:checked`)].map(i=>i.value),one=id=>picked(id)[0]||"";
@@ -146,7 +151,7 @@ async function submit(){
   const plan=one("hire_plan"),payload={token:TOKEN,submission_id:"c_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),consent_version:C.SURVEY_CONSENT_VERSION||"",
     consent_privacy:true,consent_ad:true,consent_night:false,how:picked("how"),phone_confirm:$("#phone_confirm").value.trim(),email_confirm:$("#email_confirm").value.trim(),
     needs:picked("needs"),hire_plan:plan,hire_youth:$("#hire_youth").checked&&!$("#hireMore").hidden,hire_regular:$("#hire_regular").checked&&!$("#hireMore").hidden,
-    hire_date:one("recent")==="yes"?$("#hire_date").value:"",insured:$("#insured").value.trim(),certs:picked("certs"),freq:one("freq")||"each"};
+    hire_date:one("recent")==="yes"?$("#hire_date").value:"",insured:$("#insured").value.trim(),certs:picked("certs"),own_product:one("own_product"),freq:one("freq")||"each"};
   if(!C.CONSENT_URL)return say("시안 화면이라 저장되지 않았습니다. 고르신 내용은 어디에도 보내지 않았습니다.","warn");
   if(!TOKEN)return say("링크가 올바르지 않습니다. 받으신 문자나 카카오톡의 링크로 다시 열어 주세요.");
   const btn=$("#send");btn.disabled=true;

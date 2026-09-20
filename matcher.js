@@ -212,6 +212,7 @@ function factCheck(ck,c){
     return h*2/s<=ck.ratio;
   }
   if(t==="trait")return (c.traits||[]).includes(ck.label)?true:null;
+  if(t==="own_product"){const v=String(c.own_product||"");return v==="yes"?true:(v==="no"?false:null)}   /* 온라인으로 팔 수 있는 자기 상품이 있는지(거래처 설문의 답). 답이 없거나 «잘 모르겠다» 면 모름 */
   if(t==="not"){const r=factCheck(ck.check,c);return typeof r==="boolean"?!r:null}   /* 안의 요건을 뒤집는다(모르거나 단정할 수 없으면 그대로 모름) */
   if(t==="ksic_not"){const ks=ksicsOf(c);return ks.length?!ks.some(k=>ck.ksic.some(px=>k.startsWith(px))):null}   /* 회사 업종이 그 분류로 시작하면 안 맞음. 업종을 모르면 모름 */
   if(t==="any_of"||t==="all_of"){
