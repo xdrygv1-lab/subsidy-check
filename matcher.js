@@ -39,6 +39,9 @@ function evalYouthLeap(prog,c,notices){
   const excLabels={};prog.under5_exceptions.forEach(e=>{excLabels[e.key]=e.short||e.label;if(e.short)excLabels[e.short]=e.short});
   const noneLabel=prog.under5_none_label||"해당 없음",excNone=!!flags.exceptions_none||(flags.exceptions||[]).includes(noneLabel);
   const iflags=flagsOf(c),knowledge=iflags.includes("K")?(c.industry_text||(infoOf(c)||{}).n||"선택한 종목"):null;
+  /* 지침 별표2 에 적힌 분류로는 지식서비스산업이라 단정할 수 없는 업종(전자상거래 소매업 등)은 «맞음» 대신 «확인 필요» */
+  const unsureCodes=((prog.knowledge_service_uncertain||{}).codes)||{},ks=ksicsOf(c);
+  const unsure=knowledge?(Object.keys(unsureCodes).filter(k=>ks.some(x=>x.startsWith(k))).map(k=>unsureCodes[k])[0]||null):null;
   const chosen=(flags.exceptions||[]).filter(k=>excLabels[k]).map(k=>excLabels[k]);
   const lowN=num(c.insured_low),highN=num(c.insured_high);
   /* 직원 수를 세는 자료(원천세 인원, 사원 목록)에 따라 5명 경계가 갈리는 곳은 단정하지 않는다 */
@@ -46,7 +49,8 @@ function evalYouthLeap(prog,c,notices){
     add("insured","check",`${n}명으로 셌지만 다른 자료로는 ${n>=p.min_insured?lowN:highN}명이라 ${p.min_insured}명 경계가 갈림. 고용보험 가입자 수를 확인`);
   else if(n>=p.min_insured)add("insured","pass",`고용보험 가입자 ${n}명 (지침의 기준은 신청 직전 달부터 1년간 평균이라 그 값으로는 달라질 수 있음)`);
   else if(n>=p.min_insured_exception){
-    if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
+    if(unsure)add("insured","check",`${n}명. ${unsure}이라 지식서비스산업 예외에 드는지 운영기관에 확인해야 함. 든다면 5명 미만이어도 가능`);
+    else if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
     else if(excNone)add("insured","fail",`${n}명이고 5인 미만 예외에 해당하지 않는 것으로 입력됨. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
     else add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 5인 미만 예외에서 해당 항목을 고르고, 없으면 해당 없음을 선택`);
