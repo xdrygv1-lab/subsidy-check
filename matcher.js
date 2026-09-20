@@ -223,6 +223,7 @@ function factCheck(ck,c){
     return h*2/s<=ck.ratio;
   }
   if(t==="trait")return (c.traits||[]).includes(ck.label)?true:null;
+  if(t==="months_gte"){const ms=monthsSince(c.founded);return ms===null?null:ms>=ck.n}   /* 업력이 n개월 이상 */
   if(t==="insured_lt"){const n2=num(c.insured);return n2===null?null:n2<ck.n}   /* 직원 수가 n명 미만인가 */
   if(t==="youth_majority"){   /* 지금 일하는 직원의 과반수가 청년인가. 우리 표시는 34세 이하라 과반이면 39세 이하도 과반(맞음), 아니면 모름 */
     const on=c.hire_dates_on,youth=c.youth_hire_dates_on;
@@ -238,7 +239,12 @@ function factCheck(ck,c){
   }
   if(t==="own_product"){const v=String(c.own_product||"");return v==="yes"?true:(v==="no"?false:null)}   /* 온라인으로 팔 수 있는 자기 상품이 있는지(거래처 설문의 답). 답이 없거나 «잘 모르겠다» 면 모름 */
   if(t==="not"){const r=factCheck(ck.check,c);return typeof r==="boolean"?!r:null}   /* 안의 요건을 뒤집는다(모르거나 단정할 수 없으면 그대로 모름) */
-  if(t==="ksic_not"){const ks=ksicsOf(c);return ks.length?!ks.some(k=>ck.ksic.some(px=>k.startsWith(px))):null}   /* 회사 업종이 그 분류로 시작하면 안 맞음. 업종을 모르면 모름 */
+  if(t==="ksic_not"){   /* 회사 업종이 그 분류로 시작하면 안 맞음. 업종을 모르면 모름 */
+    const ks=ksicsOf(c);if(!ks.length)return null;
+    const hit=ks.some(k=>ck.ksic.some(px=>k.startsWith(px)));
+    if(hit&&ck.uncertain)return {k:"maybe",v:null};   /* 업종으로 직종을 어림한 경우처럼 단정할 수 없을 때는 «확인할 것» */
+    return !hit;
+  }
   if(t==="any_of"||t==="all_of"){
     const rs=(ck.checks||[]).map(x=>factCheck(x,c));
     if(t==="any_of")return rs.some(r=>r===true)?true:(rs.length&&rs.every(r=>r===false)?false:null);
