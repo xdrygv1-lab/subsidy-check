@@ -223,6 +223,19 @@ function factCheck(ck,c){
     return h*2/s<=ck.ratio;
   }
   if(t==="trait")return (c.traits||[]).includes(ck.label)?true:null;
+  if(t==="insured_lt"){const n2=num(c.insured);return n2===null?null:n2<ck.n}   /* 직원 수가 n명 미만인가 */
+  if(t==="youth_majority"){   /* 지금 일하는 직원의 과반수가 청년인가. 우리 표시는 34세 이하라 과반이면 39세 이하도 과반(맞음), 아니면 모름 */
+    const on=c.hire_dates_on,youth=c.youth_hire_dates_on;
+    if(on===undefined||on===null||youth===undefined||youth===null||!on.length)return null;
+    return youth.length*2>on.length?true:null;
+  }
+  if(t==="graduate_candidate"){   /* 소상공인 졸업후보기업: 평균매출액이 업종별 소기업 기준의 30% 이상이고, 상시근로자가 소상공인 상한보다 최대 2명 적은 곳 */
+    const n=num(c.insured),sales2=num(c.sales_manwon),lim=SMALL10.has(sectionOf(c))?10:5;
+    const eok=ck.small_company_sales_eok||{},ks=ksicsOf(c);
+    const key=Object.keys(eok).sort((a,b)=>b.length-a.length).find(k=>ks.some(x=>x.startsWith(k)));
+    if(n===null||sales2===null||key===undefined)return null;
+    return (sales2>=eok[key]*10000*(ck.ratio===undefined?0.3:ck.ratio))&&(lim-2<=n&&n<lim);
+  }
   if(t==="own_product"){const v=String(c.own_product||"");return v==="yes"?true:(v==="no"?false:null)}   /* 온라인으로 팔 수 있는 자기 상품이 있는지(거래처 설문의 답). 답이 없거나 «잘 모르겠다» 면 모름 */
   if(t==="not"){const r=factCheck(ck.check,c);return typeof r==="boolean"?!r:null}   /* 안의 요건을 뒤집는다(모르거나 단정할 수 없으면 그대로 모름) */
   if(t==="ksic_not"){const ks=ksicsOf(c);return ks.length?!ks.some(k=>ck.ksic.some(px=>k.startsWith(px))):null}   /* 회사 업종이 그 분류로 시작하면 안 맞음. 업종을 모르면 모름 */
