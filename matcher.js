@@ -66,6 +66,8 @@ function evalYouthLeap(prog,c,notices){
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
     else if(excNone)add("insured","fail",`${n}명이고 5인 미만 예외에 해당하지 않는 것으로 입력됨. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
     /* 2026-09-22: 대표 나이와 개업 연월로 «청년창업기업» 예외(지침 16쪽)일 수 있는 곳을 알아본다 */
+    /* 같은 대표자 이름으로 같은 종목 사업장을 먼저 연 곳이 우리 거래처에 있다(반장 multi_site). 같은 업종 추가 개업은 창업이 아니다 */
+    else if(youthStartupHint(c)&&(num(c.earlier_same_item)||0)>=1)add("insured","check",`${n}명. 대표가 청년이고 개업 7년 이내지만, 같은 대표자 이름으로 같은 종목 사업장을 먼저 연 곳이 우리 거래처에 ${num(c.earlier_same_item)}곳 있어 «청년창업기업» 의 창업으로 보지 않을 수 있음(같은 업종 추가 개업은 창업이 아님). 동명이인일 수 있으니 확인`);
     else if(youthStartupHint(c)){youthHint=true;add("insured","check",`${n}명. 대표가 청년이고 개업 7년 이내라 «청년창업기업» 예외일 수 있음. 창업 당시 만 15~39세, 지금 1986.1.1. 이후 출생, 개업 7년 이내를 모두 갖춰야 하고, 같은 업종의 다른 사업장을 하던 사람이 새로 연 곳은 창업으로 보지 않음(중소기업창업 지원법). 증빙 확인`)}
     else add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 5인 미만 예외에서 해당 항목을 고르고, 없으면 해당 없음을 선택`);
   }else add("insured","fail","고용보험 가입자가 없음");
