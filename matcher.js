@@ -30,6 +30,14 @@ function addMonths(iso,months){
 }
 const isOpen=(it,today)=>!it.end||it.end>=today;
 
+/* «청년창업기업» 예외(지침 16쪽)일 수 있는가: 개업 7년 이내이고, 대표가 창업 당시 만 15~39세이며 지금 1986.1.1. 이후 출생.
+   출생연도가 있으면 그것으로, 없으면 사무실 나이 표시(le34, 35to39)로 본다. 다른 사업장을 하던 사람인지는 자료로 알 수 없어 «일 수 있음» 까지만 */
+function youthStartupHint(c){
+  const ms=monthsSince(c.founded);if(ms===null||ms>=84)return false;
+  const by=num(c.ceo_birth_year);
+  if(by!==null){const fm=/^(\d{4})/.exec(String(c.founded||""));return by>=1986&&!!fm&&(+fm[1]-by)>=15&&(+fm[1]-by)<=39}
+  return c.ceo_age_band==="le34"||c.ceo_age_band==="35to39";
+}
 function evalYouthLeap(prog,c,notices){
   /* 인천 강화군·옹진군, 경기 가평군·연천군은 수도권이지만 지침이 비수도권으로 지원한다(인구감소지역 우대지원 지역, 53쪽).
      그래서 취업애로청년 요건이 없고 청년 장기근속 인센티브도 받는다 */
@@ -47,6 +55,7 @@ function evalYouthLeap(prog,c,notices){
   const unsure=knowledge?(Object.keys(unsureCodes).filter(k=>ks.some(x=>x.startsWith(k))).map(k=>unsureCodes[k])[0]||null):null;
   const chosen=(flags.exceptions||[]).filter(k=>excLabels[k]).map(k=>excLabels[k]);
   const lowN=num(c.insured_low),highN=num(c.insured_high);
+  let youthHint=false;
   /* 직원 수를 세는 자료(원천세 인원, 사원 목록)에 따라 5명 경계가 갈리는 곳은 단정하지 않는다 */
   if((n>=p.min_insured&&lowN!==null&&lowN<p.min_insured)||(n<p.min_insured&&highN!==null&&highN>=p.min_insured))
     add("insured","check",`${n}명으로 셌지만 다른 자료로는 ${n>=p.min_insured?lowN:highN}명이라 ${p.min_insured}명 경계가 갈림. 고용보험 가입자 수를 확인`);
@@ -56,6 +65,8 @@ function evalYouthLeap(prog,c,notices){
     else if(knowledge)add("insured","pass",`${n}명이지만 지식서비스산업(${knowledge}) 예외로 보임. 표준산업분류 기준 추정이며 운영기관이 최종 확인`);
     else if(chosen.length)add("insured","pass",`${n}명이지만 예외 대상(${chosen.join(", ")})으로 입력됨. 증빙 확인 필요`);
     else if(excNone)add("insured","fail",`${n}명이고 5인 미만 예외에 해당하지 않는 것으로 입력됨. 5인 미만은 지식서비스·문화콘텐츠·신재생에너지 산업, 미래유망기업, 청년창업기업 등만 가능`);
+    /* 2026-09-22: 대표 나이와 개업 연월로 «청년창업기업» 예외(지침 16쪽)일 수 있는 곳을 알아본다 */
+    else if(youthStartupHint(c)){youthHint=true;add("insured","check",`${n}명. 대표가 청년이고 개업 7년 이내라 «청년창업기업» 예외일 수 있음. 창업 당시 만 15~39세, 지금 1986.1.1. 이후 출생, 개업 7년 이내를 모두 갖춰야 하고, 같은 업종의 다른 사업장을 하던 사람이 새로 연 곳은 창업으로 보지 않음(중소기업창업 지원법). 증빙 확인`)}
     else add("insured","check",`${n}명. 5인 미만은 예외 업종·기업만 가능. 5인 미만 예외에서 해당 항목을 고르고, 없으면 해당 없음을 선택`);
   }else add("insured","fail","고용보험 가입자가 없음");
 
@@ -129,7 +140,7 @@ function evalYouthLeap(prog,c,notices){
   else if(hireFail){verdict="이번 채용은 대상이 아닐 가능성 높음";level="no"}
   /* 2026-09-22 고침: 5인 미만인데 예외(청년창업기업 등)에 드는지 모르는 곳을 채용 여부와 상관없이 이렇게 낸다.
      전에는 직원 2명 슈퍼(5인 미만 예외 업종이 아님)도 청년만 뽑으면 받는 것처럼 읽혔다 */
-  else if(n<p.min_insured&&!(num(c.insured_high)!==null&&num(c.insured_high)>=p.min_insured)&&results.some(r=>r.key==="insured"&&r.status==="check")){verdict="직원 5명 미만: 예외 업종·기업이어야 가능";level="maybe"}
+  else if(n<p.min_insured&&!(num(c.insured_high)!==null&&num(c.insured_high)>=p.min_insured)&&results.some(r=>r.key==="insured"&&r.status==="check")){verdict=youthHint?"직원 5명 미만: 청년창업기업 예외일 수 있음":"직원 5명 미만: 예외 업종·기업이어야 가능";level="maybe"}
   else if(hireReady&&!checks.length){verdict="대상일 가능성 높음";level="yes"}
   else if(hireReady){verdict="대상일 가능성 있음 (확인 항목 있음)";level="maybe"}
   else if(results.some(r=>companyKeys.includes(r.key)&&r.status==="check")){verdict="청년 채용 시 활용 가능 (확인 항목 있음)";level="maybe"}
