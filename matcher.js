@@ -127,8 +127,12 @@ function evalYouthLeap(prog,c,notices){
   let verdict,level;
   if(companyFail){verdict="대상이 아닐 가능성 높음";level="no"}
   else if(hireFail){verdict="이번 채용은 대상이 아닐 가능성 높음";level="no"}
+  /* 2026-09-22 고침: 5인 미만인데 예외(청년창업기업 등)에 드는지 모르는 곳을 채용 여부와 상관없이 이렇게 낸다.
+     전에는 직원 2명 슈퍼(5인 미만 예외 업종이 아님)도 청년만 뽑으면 받는 것처럼 읽혔다 */
+  else if(n<p.min_insured&&!(num(c.insured_high)!==null&&num(c.insured_high)>=p.min_insured)&&results.some(r=>r.key==="insured"&&r.status==="check")){verdict="직원 5명 미만: 예외 업종·기업이어야 가능";level="maybe"}
   else if(hireReady&&!checks.length){verdict="대상일 가능성 높음";level="yes"}
   else if(hireReady){verdict="대상일 가능성 있음 (확인 항목 있음)";level="maybe"}
+  else if(results.some(r=>companyKeys.includes(r.key)&&r.status==="check")){verdict="청년 채용 시 활용 가능 (확인 항목 있음)";level="maybe"}
   else{verdict="청년 채용 시 활용 가능";level="maybe"}
 
   const cap=Math.max(1,Math.ceil(n*p.cap_ratio));let estimate=null;   /* 지침 42쪽: 기준 피보험자 수에 50%를 곱하고 소수점 이하는 올림(9명 -> 5명) */
