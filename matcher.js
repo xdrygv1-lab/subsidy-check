@@ -241,6 +241,10 @@ function factCheck(ck,c){
     return (sales2>=eok[key]*10000*(ck.ratio===undefined?0.3:ck.ratio))&&(lim-2<=n&&n<lim);
   }
   if(t==="own_product"){const v=String(c.own_product||"");return v==="yes"?true:(v==="no"?false:null)}   /* 온라인으로 팔 수 있는 자기 상품이 있는지(거래처 설문의 답). 답이 없거나 «잘 모르겠다» 면 모름 */
+  if(t==="ksic_in"){   /* 회사 업종이 그 분류로 시작하면 맞음(«음식점·도소매·교육 업종이면 된다» 처럼 대상 업종을 적은 공고). 업종을 모르면 모름 */
+    const ks=ksicsOf(c);if(!ks.length)return null;
+    return ks.some(k=>ck.ksic.some(px=>k.startsWith(px)))&&!ks.some(k=>(ck.ksic_except||[]).some(px=>k.startsWith(px)));
+  }
   if(t==="not"){const r=factCheck(ck.check,c);return typeof r==="boolean"?!r:null}   /* 안의 요건을 뒤집는다(모르거나 단정할 수 없으면 그대로 모름) */
   if(t==="ksic_not"){   /* 회사 업종이 그 분류로 시작하면 안 맞음. 업종을 모르면 모름 */
     const ks=ksicsOf(c);if(!ks.length)return null;
@@ -334,6 +338,7 @@ function factEvidence(ck,c){
   }
   if(t==="own_product"){const v=String(c.own_product||"");return "설문 답: "+(v==="yes"?"자기 상품 있음":v==="no"?"자기 상품 없음":"아직 답 없음")}
   if(t==="ksic_not"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 제외 "+(ck.ksic||[]).join(", ")}
+  if(t==="ksic_in"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 대상 "+(ck.ksic||[]).join(", ")+((ck.ksic_except||[]).length?" (단, "+ck.ksic_except.join(", ")+" 제외)":"")}
   if(t==="not")return factEvidence(ck.check||{},c);
   if(t==="any_of"||t==="all_of")return (ck.checks||[]).map(x=>factEvidence(x,c)).filter(x=>x).join(" · ");
   return "";   /* need_data 처럼 회사 값으로 가릴 수 없는 요건: 사람이 확인할 것 */
