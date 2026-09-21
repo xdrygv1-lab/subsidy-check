@@ -31,7 +31,10 @@ function addMonths(iso,months){
 const isOpen=(it,today)=>!it.end||it.end>=today;
 
 function evalYouthLeap(prog,c,notices){
-  const p=prog.params,n=num(c.insured,0),sido=c.sido||"",capital=p.capital_region.includes(sido);
+  /* 인천 강화군·옹진군, 경기 가평군·연천군은 수도권이지만 지침이 비수도권으로 지원한다(인구감소지역 우대지원 지역, 53쪽).
+     그래서 취업애로청년 요건이 없고 청년 장기근속 인센티브도 받는다 */
+  const p=prog.params,n=num(c.insured,0),sido=c.sido||"",sg=String(c.sigungu||"");
+  const capital=p.capital_region.includes(sido)&&!(p.capital_region_except_sigungu||[]).some(x=>sg.includes(x));
   const ptype=prog.types.find(t=>t.key===(capital?"수도권":"비수도권")),flags=c.flags||{},code=codeOf(c);
   const labels=Object.fromEntries(prog.conditions.map(x=>[x.key,x])),results=[];
   const add=(key,status,message)=>results.push({key,label:labels[key].label,status,message,detail:labels[key].detail,source:labels[key].source});
