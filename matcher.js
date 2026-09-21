@@ -199,6 +199,7 @@ function factCheck(ck,c){
   }
   if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return sg?sg.includes(ck.value):null}   /* 회사 시군구에 그 이름이 들어 있는가(제목에 구 이름이 없는 구청 사업) */
   if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
+  if(t==="founded_since"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))>=ck.ym:null}   /* 그 연월 이후에 개업했는가. 업력 몇 개월로 적으면 달이 바뀔 때마다 기준이 밀린다 */
   if(t==="months_lt"){const ms=monthsSince(c.founded);return ms===null?null:ms<ck.n}   /* 업력(개업한 달부터 이번 달까지)이 n개월 미만 */
   if(t==="ceo_age_lte"){   /* 대표자 나이가 n세 이하. 출생연도(연 나이라 경계 한 살은 모름으로 둔다) > 사무실 나이 표시 > 회사 특성 순 */
     const by=num(c.ceo_birth_year);
@@ -295,13 +296,14 @@ function factEvidence(ck,c){
     return "지금 일하는 직원의 채용일 "+c.hire_dates_on.length+"건 가운데 "+ck.date+" 뒤 "+hit.length+"건"+(hit.length?" (가장 최근 "+hit[hit.length-1]+")":"");
   }
   if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return (sg?"우리 시군구 "+sg:"우리 시군구: 모름")+" / 기준 "+ck.value}
-  if(t==="founded_by"||t==="months_lt"||t==="months_gte"){
+  if(t==="founded_by"||t==="founded_since"||t==="months_lt"||t==="months_gte"){
     const fd=String(c.founded||"");
     if(!fd)return "우리 개업 연월: 모름";
     const ms=monthsSince(c.founded);
     let s="우리 개업 "+fd.slice(0,7);
     if(ms!==null)s+=" (업력 "+ms+"개월, 약 "+Math.floor(ms/12)+"년)";
     if(t==="founded_by")return s+" / 기준 "+ck.ym+" 이전";
+    if(t==="founded_since")return s+" / 기준 "+ck.ym+" 이후";
     return s+" / 기준 "+ck.n+"개월 "+(t==="months_lt"?"미만":"이상");
   }
   if(t==="ceo_age_lte"){
