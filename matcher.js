@@ -364,7 +364,9 @@ function factEvidence(ck,c){
   if(t==="ksic_not"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 제외 "+(ck.ksic||[]).join(", ")}
   if(t==="ksic_in"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 대상 "+(ck.ksic||[]).join(", ")+((ck.ksic_except||[]).length?" (단, "+ck.ksic_except.join(", ")+" 제외)":"")}
   if(t==="not"){const s=factEvidence(ck.check||{},c);return s?s+" (이 기준에 들지 않아야 함)":""}   /* 뒤집은 요건은 거꾸로 읽히지 않게 표시(9/24) */
-  if(t==="any_of"||t==="all_of")return (ck.checks||[]).map(x=>factEvidence(x,c)).filter(x=>x).join(t==="any_of"?" 또는 ":" · ");
+  if(t==="any_of"||t==="all_of"){const kids=ck.checks||[];
+    if(t==="any_of"&&kids.length&&kids.every(k=>k.type==="sigungu_has")){const sg=String(c.sigungu||"").trim();return (sg?"우리 시군구 "+sg:"우리 시군구: 모름")+" / 기준 "+kids.map(k=>String(k.value)).join("·")+" 가운데 하나"}   /* 여러 시군 가운데 하나: 우리 값을 한 번만(9/24) */
+    return kids.map(x=>factEvidence(x,c)).filter(x=>x).join(t==="any_of"?" 또는 ":" · ")}
   return "";   /* need_data 처럼 회사 값으로 가릴 수 없는 요건: 사람이 확인할 것 */
 }
 /* 요건 묶음을 돌려 맞음, 안 맞음, 확인할 것, 이렇게 하면 글 목록을 낸다. evidence 는 요건마다 «우리 회사 값» 을 붙인 것 */
