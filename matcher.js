@@ -260,7 +260,8 @@ function factCheck(ck,c){
     if(n===null||sales2===null||key===undefined)return null;
     return (sales2>=eok[key]*10000*(ck.ratio===undefined?0.3:ck.ratio))&&(lim-2<=n&&n<lim);
   }
-  if(t==="own_product"){const v=String(c.own_product||"");return v==="yes"?true:(v==="no"?false:null)}   /* 온라인으로 팔 수 있는 자기 상품이 있는지(거래처 설문의 답). 답이 없거나 «잘 모르겠다» 면 모름 */
+  if(t==="own_product"){const v=String(c.own_product||"");return v==="yes"?true:(v==="no"?false:null)}
+  if(t==="yellow_umbrella"){const v=c.yellow_umbrella;return (v&&typeof v==="object"&&(num(v.manwon,0)||0)>0)?true:null}   /* 노란우산 가입: 신고서에 소기업·소상공인 공제부금 소득공제가 있으면 맞음, 없으면 모름 */   /* 온라인으로 팔 수 있는 자기 상품이 있는지(거래처 설문의 답). 답이 없거나 «잘 모르겠다» 면 모름 */
   if(t==="ksic_in"){   /* 회사 업종이 그 분류로 시작하면 맞음(«음식점·도소매·교육 업종이면 된다» 처럼 대상 업종을 적은 공고). 업종을 모르면 모름 */
     const ks=ksicsOf(c);if(!ks.length)return null;
     return ks.some(k=>ck.ksic.some(px=>k.startsWith(px)))&&!ks.some(k=>(ck.ksic_except||[]).some(px=>k.startsWith(px)));
@@ -358,6 +359,8 @@ function factEvidence(ck,c){
     return s+" / 우리 직원 "+(n===null?"모름":Math.trunc(n)+"명")+", "+(lim-2)+"~"+(lim-1)+"명이어야 함";
   }
   if(t==="own_product"){const v=String(c.own_product||"");return "설문 답: "+(v==="yes"?"자기 상품 있음":v==="no"?"자기 상품 없음":"아직 답 없음")}
+  if(t==="yellow_umbrella"){const v=c.yellow_umbrella;if(!v||typeof v!=="object")return "우리 신고서 자료 없음";const m=num(v.manwon,0)||0;
+    return m>0?"우리 "+v.year+"년 귀속 종합소득세 신고서에 노란우산 소득공제 "+evNum(m)+"만원":"우리 "+v.year+"년 귀속 종합소득세 신고서에 노란우산 소득공제 없음(가입했어도 공제를 안 받았을 수 있음)"}
   if(t==="ksic_not"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 제외 "+(ck.ksic||[]).join(", ")}
   if(t==="ksic_in"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 대상 "+(ck.ksic||[]).join(", ")+((ck.ksic_except||[]).length?" (단, "+ck.ksic_except.join(", ")+" 제외)":"")}
   if(t==="not"){const s=factEvidence(ck.check||{},c);return s?s+" (이 기준에 들지 않아야 함)":""}   /* 뒤집은 요건은 거꾸로 읽히지 않게 표시(9/24) */
