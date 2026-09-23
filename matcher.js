@@ -21,7 +21,9 @@ function daysLeft(end){const a=end.split("-").map(Number),t=todayISO().split("-"
 function monthsSince(ym){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(ym||""));if(!m)return null;const d=new Date();return (d.getFullYear()-+m[1])*12+d.getMonth()+1-+m[2]}
 const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(sectionOf(c))?10:5);
 const sameSido=(s,list)=>!list||!list.length||list.includes(s);
-function sigunguState(c,list){if(!list||!list.length)return "match";const where=((c.sigungu||"")+" "+(c.address||"")).trim();if(!where)return "unknown";return list.some(s=>where.includes(s))?"match":"other"}
+function sigunguState(c,list){if(!list||!list.length)return "match";const where=((c.sigungu||"")+" "+(c.address||"")).trim();if(!where)return "unknown";return list.some(s=>placeHas(where,s))?"match":"other"}
+/* 시군구 이름이 «낱말로» 들어 있는가. 글자만 찾으면 강서구 안의 서구, 달서구 안의 서구, 남동구 안의 동구가 걸린다(2026-09-23 밤). matcher.py 의 place_has 와 같다 */
+function placeHas(where,name){if(!name)return false;return new RegExp("(?:^|[\\s,·ㆍ시군])"+String(name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).test(where)}
 /* 날짜(YYYY-MM-DD)에 개월 수를 더한다. 말일을 넘으면 그 달 말일로 맞춘다 */
 function addMonths(iso,months){
   const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));if(!m)return null;
@@ -214,7 +216,7 @@ function factCheck(ck,c){
     if((ck.unless_industry_flags||[]).some(f=>flagsOf(c).includes(f)))return {k:"maybe",v:null};   /* 업종 표시(K 지식서비스산업 등)는 참고용 어림이라 예외에 든다고 단정하지 않는다: «확인할 것» */
     return n===null?null:false;
   }
-  if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return sg?sg.includes(ck.value):null}   /* 회사 시군구에 그 이름이 들어 있는가(제목에 구 이름이 없는 구청 사업) */
+  if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return sg?placeHas(sg,ck.value):null}   /* 회사 시군구에 그 이름이 들어 있는가(제목에 구 이름이 없는 구청 사업) */
   if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
   if(t==="founded_since"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))>=ck.ym:null}   /* 그 연월 이후에 개업했는가. 업력 몇 개월로 적으면 달이 바뀔 때마다 기준이 밀린다 */
   if(t==="months_lt"){const ms=monthsSince(c.founded);return ms===null?null:ms<ck.n}   /* 업력(개업한 달부터 이번 달까지)이 n개월 미만 */
@@ -454,7 +456,7 @@ function matchNotices(c,notices,needsDef,limit){
         else if(c.sido){score-=local.penalty||0;flags.push(sm[1]+" 지역 사업일 수 있음")}
       }
       else if(lm&&!(local.skip_names||[]).includes(lm[1])&&!(local.skip_suffix&&lm[1].endsWith(local.skip_suffix))){
-        if((c.sigungu||"").includes(lm[1])){score+=local.bonus||0;const rest=reasons.filter(r=>r!=="지역: 전국");reasons.length=0;reasons.push("지역: "+lm[1],...rest)}
+        if(placeHas(c.sigungu||"",lm[1])){score+=local.bonus||0;const rest=reasons.filter(r=>r!=="지역: 전국");reasons.length=0;reasons.push("지역: "+lm[1],...rest)}
         else{score-=local.penalty||0;flags.push(lm[1]+" 지역 사업일 수 있음")}
       }
     }
