@@ -360,8 +360,8 @@ function factEvidence(ck,c){
   if(t==="own_product"){const v=String(c.own_product||"");return "설문 답: "+(v==="yes"?"자기 상품 있음":v==="no"?"자기 상품 없음":"아직 답 없음")}
   if(t==="ksic_not"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 제외 "+(ck.ksic||[]).join(", ")}
   if(t==="ksic_in"){const ks=ksicsOf(c);return (ks.length?"우리 업종코드 "+ks.slice(0,3).join(", "):"우리 업종: 모름")+" / 대상 "+(ck.ksic||[]).join(", ")+((ck.ksic_except||[]).length?" (단, "+ck.ksic_except.join(", ")+" 제외)":"")}
-  if(t==="not")return factEvidence(ck.check||{},c);
-  if(t==="any_of"||t==="all_of")return (ck.checks||[]).map(x=>factEvidence(x,c)).filter(x=>x).join(" · ");
+  if(t==="not"){const s=factEvidence(ck.check||{},c);return s?s+" (이 기준에 들지 않아야 함)":""}   /* 뒤집은 요건은 거꾸로 읽히지 않게 표시(9/24) */
+  if(t==="any_of"||t==="all_of")return (ck.checks||[]).map(x=>factEvidence(x,c)).filter(x=>x).join(t==="any_of"?" 또는 ":" · ");
   return "";   /* need_data 처럼 회사 값으로 가릴 수 없는 요건: 사람이 확인할 것 */
 }
 /* 요건 묶음을 돌려 맞음, 안 맞음, 확인할 것, 이렇게 하면 글 목록을 낸다. evidence 는 요건마다 «우리 회사 값» 을 붙인 것 */
