@@ -150,6 +150,11 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
       item.points.unshift("실제 사업이 대상 업종이 아니면 감면이 취소되어 감면받은 세액과 가산세를 다시 낼 수 있습니다. 기본자료 업종이 실제 사업과 다른지부터 확인합니다");
       item.points.push(...excludeNotes(ksics,S));
     }
+    const esi=num(c.earlier_same_item);
+    if(esi!==null&&esi>=1){   /* 6조⑩4호: 사업 확장은 창업이 아니다(대표자 이름으로 묶은 값이라 동명이인일 수 있다) */
+      if(item.level==="done"){item.level="check";item.headline="창업감면을 받고 있는데 사업을 넓힌 것이면 창업이 아니어서 확인이 필요합니다"}
+      item.points.push("같은 대표자 이름으로 같은 종목 사업장을 먼저 연 곳이 우리 거래처에 "+esi+"곳 있습니다. 사업을 넓힌 것이면 창업으로 보지 않아(조특법 6조⑩4호) 감면이 취소될 수 있습니다. 동명이인일 수 있으니 확인합니다");
+    }
     return item;
   }
   const m=/^(\d{4})/.exec(String(c.founded||"")),fy=m?+m[1]:null;
@@ -197,6 +202,11 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
     return item;
   }
   item.level=(cls.state==="yes"&&rate!==null&&c.startup_type==="new")?"high":"check";
+  const esiC=num(c.earlier_same_item);
+  if(esiC!==null&&esiC>=1){
+    item.level="check";
+    item.points.push("같은 대표자 이름으로 같은 종목 사업장을 먼저 연 곳이 우리 거래처에 "+esiC+"곳 있어, 사업을 넓힌 것이면 창업으로 보지 않습니다(조특법 6조⑩4호). 동명이인일 수 있으니 확인합니다");
+  }
   if(rate!==null)item.headline=taxName+"의 "+rate+"%를 "+S.period_years+"년간 감면받을 가능성이 있습니다";
   else if(rates)item.headline=rates[0]===0?"청년창업(창업 당시 만 "+S.youth_age_max+"세 이하)이면 "+taxName+"의 "+rates[1]+"%를 감면받을 수 있습니다":"대표자 나이에 따라 "+taxName+"의 "+rates[0]+"~"+rates[1]+"%를 감면받을 가능성이 있습니다";
   else item.headline="사업장 위치와 대표자 나이에 따라 "+taxName+"의 50~100%를 감면받을 가능성이 있습니다";
