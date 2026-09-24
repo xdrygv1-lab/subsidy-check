@@ -181,7 +181,7 @@ function ksicsOf(c){
 /* 손으로 옮긴 요건 하나를 회사 값과 견준다. true 맞음, false 안 맞음, null 회사 값을 몰라 말하지 않음 */
 /* 4대보험 고지내역의 고용보험 가입자 수(위하고 창이 숫자만 뽑아 줌, 2026-09-24 상권 허용). 없으면 null */
 function eiNum(c){const ei=c.insured_ei;return (ei&&typeof ei==="object")?num(ei.n):null}
-/* 위하고 직원 수를 모르는 곳: 고용보험 고지 인원이 있으면 그 숫자를 «확인할 것» 글에 붙이고, 없으면 모름. 상시근로자 수와 다를 수 있어 단정하지 않는다 */
+/* 위하고 직원 수를 모르는 곳: 고용보험 가입자 수가 있으면 그 숫자를 «확인할 것» 글에 붙이고, 없으면 모름. 상시근로자 수와 다를 수 있어 단정하지 않는다 */
 function eiOnly(c){const ei=eiNum(c);return ei===null?null:{k:"ei",v:ei}}
 
 function factCheck(ck,c){
@@ -305,7 +305,7 @@ function factEvidence(ck,c){
     if(low!==null&&(n===null||Math.trunc(low)!==Math.trunc(n)))s+=", 작게 세면 "+Math.trunc(low)+"명";
     if(high!==null&&(n===null||Math.trunc(high)!==Math.trunc(n)))s+=", 크게 세면 "+Math.trunc(high)+"명";
     const ei=eiNum(c);
-    if(ei!==null){const m=/^(\d{4})-(\d{1,2})/.exec(String((c.insured_ei||{}).ym||""));s+=", 고용보험 고지 "+Math.trunc(ei)+"명"+(m?"("+m[1]+"년 "+(+m[2])+"월)":"")}
+    if(ei!==null){const m=/^(\d{4})-(\d{1,2})/.exec(String((c.insured_ei||{}).ym||""));s+=", 고용보험 가입자 "+Math.trunc(ei)+"명"+(m?"("+m[1]+"년 "+(+m[2])+"월)":"")}
     if(t==="small_biz"){
       const lim=SMALL10.has(sectionOf(c))?10:5;
       if(ck.exclude_hired_since)s+=" (새로 뽑은 "+(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length+"명은 빼고 셈)";
