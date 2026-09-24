@@ -82,6 +82,8 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
   const taken=reliefs.includes("employment")?"yes":(reliefs.includes("none")?"no":"unknown");
   const old=E.periods[0],p=E.periods[E.periods.length-1],r=reg.capital?p.capital:p.non_capital,ro=reg.capital?old.capital:old.non_capital;
   const n=Math.max(1,Math.floor(num(c.emp_increase_count)||1));
+  const ovE=T.startup.employment_overlap_from===undefined?2025:T.startup.employment_overlap_from,fmE=/^(\d{4})/.exec(String(c.founded||""));
+  const newStartup=reliefs.includes("startup")&&!!fmE&&+fmE[1]>=ovE;   /* 2025년 이후 창업 + 창업감면: 통합고용을 함께 못 받는다(127조④ 단서) */
   if(allEx){item.level="none";item.headline="공제에서 빠지는 업종으로 보입니다 ("+exs[0]+")";return item}
   if(c.emp_increase==="yes"){
     if(taken==="yes"){
@@ -92,8 +94,7 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
     }
     item.level="high";
     item.headline=taken==="no"?"받지 않은 고용 세액공제를 돌려받을 가능성이 있습니다":"고용 세액공제 대상일 가능성이 있습니다";
-    const ovE=T.startup.employment_overlap_from===undefined?2025:T.startup.employment_overlap_from,fmE=/^(\d{4})/.exec(String(c.founded||""));
-    if(reliefs.includes("startup")&&fmE&&+fmE[1]>=ovE){   /* 2025년 이후 창업: 창업감면을 받는 해에는 통합고용 공제를 함께 못 받는다(127조④ 단서) */
+    if(newStartup){
       item.level="check";
       item.headline="창업감면을 받는 해에는 고용 세액공제를 함께 받을 수 없어, 둘 중 어느 쪽이 유리한지 견줘 봐야 합니다";
       item.points.push(ovE+"년 이후 창업한 곳은 창업감면과 통합고용 세액공제 가운데 하나만 받습니다(조특법 127조④, 2024.12.31 개정)");
@@ -116,6 +117,10 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
     return item;
   }else{
     item.level="check";item.headline="직원이 늘어난 해가 있었는지 자료로 확인해 볼 필요가 있습니다";
+    if(newStartup){
+      item.headline="창업감면을 받는 해에는 고용 세액공제를 함께 받을 수 없어, 직원이 늘면 둘 중 유리한 쪽을 고릅니다";
+      item.points.push(ovE+"년 이후 창업한 곳은 창업감면과 통합고용 세액공제 가운데 하나만 받습니다(조특법 127조④, 2024.12.31 개정)");
+    }
   }
   item.points.push(E.headcount_note);
   return item;
@@ -128,7 +133,10 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
     item.level="done";item.headline="이미 적용 중이라면 감면 기간("+S.period_years+"년)이 끝나는 해를 챙기면 됩니다";
     item.points.push("감면 기간에 직원이 늘면 추가 감면을 받을 수 있는지도 함께 확인합니다");
     const ovD=S.employment_overlap_from===undefined?2025:S.employment_overlap_from,dm=/^(\d{4})/.exec(String(c.founded||""));
-    if(reliefs.includes("employment")&&dm&&+dm[1]>=ovD)item.points.push(ovD+"년 이후 창업한 곳은 창업감면을 받는 해에 통합고용 세액공제를 함께 받을 수 없습니다. 같은 해 신고에 둘 다 들어가 있으면 확인이 필요합니다(조특법 127조④)");
+    if(dm&&+dm[1]>=ovD){
+      if(reliefs.includes("employment"))item.points.push(ovD+"년 이후 창업한 곳은 창업감면을 받는 해에 통합고용 세액공제를 함께 받을 수 없습니다. 같은 해 신고에 둘 다 들어가 있으면 확인이 필요합니다(조특법 127조④)");
+      else item.points.push(ovD+"년 이후 창업한 곳은 창업감면을 받는 해에 직원이 늘어도 통합고용 세액공제를 함께 받을 수 없어, 둘 중 유리한 쪽을 고릅니다(조특법 127조④)");
+    }else if(dm)item.points.push((ovD-1)+"년까지 창업한 곳은 창업감면과 함께 통합고용 세액공제도 받을 수 있습니다. 직원이 늘어 받는 추가 감면(6조⑦)을 받는 해만 둘 중 하나를 고릅니다");
     const dc=classify(ksics,S);
     if(dc.state==="no"){   /* 이미 받는데 업종이 대상이 아니면 나중에 감면이 취소될 수 있다 */
       item.level="check";
