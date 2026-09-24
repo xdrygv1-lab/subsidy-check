@@ -132,6 +132,11 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
   return item;
 }
 
+/* 특별세액감면 소기업 매출 기준표: 2025년부터 새 기준(2025.9.1 별표 3 개정), 그 전은 옛 기준 */
+function smallTable(P,year){
+  const from=P.small_company_new_from_year===undefined?2025:P.small_company_new_from_year;
+  return (year!==null&&year!==undefined&&year<from&&P.small_company_sales_eok_before)?P.small_company_sales_eok_before:P.small_company_sales_eok;
+}
 function startup(c,T,ksics,reg,reliefs,taxAmt){
   const S=T.startup,item={key:"startup",title:S.title,level:"check",headline:"",estimate:"",points:[],basis:"조세특례제한법 제6조"};
   const taxName=c.biz_type==="법인"?"법인세":(c.biz_type==="개인"?"소득세":"소득세·법인세");
@@ -253,9 +258,9 @@ function smeSpecial(c,T,ksics,reg,reliefs,taxAmt){
   if(taxAmt!==null&&taxAmt>0)item.estimate="작년에 낸 세금이 "+man(taxAmt)+"원이라면 1년에 약 "+man(Math.min(taxAmt*rate/100,P.cap_manwon))+"원";
   item.points.push("소기업 감면율은 도소매·의료업 "+P.rates.wholesale_retail_medical+"%, 그 밖의 업종은 수도권 "+P.rates.capital+"%, 수도권 밖 "+P.rates.non_capital+"%입니다");
   if(!smallSure){
-    const thr=hit(ksics[0]||"",P.small_company_sales_eok);
-    if(sales!==null&&thr!==null&&sales<=thr*10000)item.points.push("지금 기준으로 이 업종의 소기업 매출 기준("+thr+"억원) 안에 있습니다. 과거 연도는 기준이 달라 해마다 확인합니다");
-    else if(sales!==null&&thr!==null)item.points.push("매출이 지금의 소기업 기준("+thr+"억원)을 넘어 중기업일 수 있습니다. 중기업은 감면율이 낮고 수도권에서는 대부분 대상이 아닙니다");
+    const sy=salesYear(c),thr=hit(ksics[0]||"",smallTable(P,sy));
+    if(sales!==null&&thr!==null&&sales<=thr*10000)item.points.push(sy+"년 매출이 그 해 이 업종의 소기업 매출 기준("+thr+"억원) 안에 있습니다. 소기업 기준은 2025년에 올라 2024년까지는 더 낮은 기준을 봅니다");
+    else if(sales!==null&&thr!==null)item.points.push(sy+"년 매출이 그 해 소기업 기준("+thr+"억원)을 넘어 중기업일 수 있습니다. 중기업은 감면율이 낮고 수도권에서는 대부분 대상이 아닙니다");
     else item.points.push("매출이 "+man(P.small_company_safe_sales_manwon)+"원을 넘으면 업종별 소기업 기준을 따로 봐야 하고, 기준을 넘으면 감면율이 낮아지거나 대상에서 빠질 수 있습니다");
   }
   if(cls.state==="check")item.points.push("업종 확인 필요: "+cls.name);
