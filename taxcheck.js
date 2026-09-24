@@ -80,7 +80,7 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
   if(c.emp_increase==="yes"){
     if(taken==="yes"){
       item.level="done";item.headline="이미 공제를 받으셨다면 직원 수 유지가 중요합니다";
-      item.points.push("공제를 받은 뒤 2년 안에 직원 수가 줄면 받은 공제를 다시 내야 할 수 있습니다");
+      item.points.push("2025년까지 늘어난 직원 몫은 공제를 받은 뒤 2년 안에 직원 수가 줄면 받은 공제를 다시 내야 할 수 있습니다. 2026년부터 늘어난 직원 몫은 다시 내는 규정이 없어졌고, 유지하면 2·3년차에 더 받습니다");
       item.points.push("빠진 연도가 없는지, 청년 등 우대 금액이 제대로 들어갔는지는 신고서로 확인할 수 있습니다");
       return item;
     }
