@@ -132,11 +132,11 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   }
   if(["takeover","conversion","reopen"].includes(c.startup_type)){
     item.level="none";item.headline="사업 인수, 법인 전환, 폐업 후 같은 업종 재개는 세법상 창업으로 보지 않아 대상이 아닐 가능성이 큽니다";
-    item.points.push("인수한 자산 비율이 낮은 경우처럼 예외가 있어 필요하면 따로 검토합니다");
+    item.points.push("넘겨받은 사업용 자산(토지·감가상각 자산)이 새 사업 자산의 30% 이하면 창업으로 볼 수 있어 따로 검토합니다(조특령 5조⑳)");
     return item;
   }
   const by=num(c.ceo_birth_year),age=by===null?null:fy-by;
-  let youth=age===null?"unknown":(age<=S.youth_age_max?"yes":(age<=S.youth_age_max+S.military_years_max+1?"maybe":"no"));
+  let youth=age===null?"unknown":(age<(S.youth_age_min===undefined?15:S.youth_age_min)?"no":(age<=S.youth_age_max?"yes":(age<=S.youth_age_max+S.military_years_max+1?"maybe":"no")));   /* 조특령 5조① «창업 당시 15세 이상» */
   /* 출생연도가 없고 사무실 자료의 나이 표시만 있을 때: le34 = 표시를 만든 날에 만 34세 이하, 35to39 = 만 35~39세 (만 나이, 연 나이 아님).
      지금 34세 이하면 창업 당시에도 34세 이하다. 35~39세면 개업한 달부터 표시를 만든 달까지 꽉 찬 햇수만큼만 나이를 거슬러,
      창업 때 가장 많았을 나이가 34세 이하일 때만 청년으로 보고 나머지는 확인이 필요하다. 개업일의 날짜는 모르므로 한 달을 더 빼 보수적으로 센다 */
@@ -175,6 +175,8 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   if(youth==="unknown")item.points.push("대표자 출생연도를 넣으면 청년창업(창업 당시 만 "+S.youth_age_max+"세 이하) 여부를 판정합니다");
   if(youth==="maybe")item.points.push("창업 당시 나이가 기준 근처입니다. 생일이 지났는지와 군 복무 기간(최대 "+S.military_years_max+"년을 나이에서 뺌)에 따라 청년창업 여부가 달라집니다");
   if(youth==="yes"&&c.biz_type==="법인")item.points.push("법인은 청년인 대표자가 최대주주여야 청년창업으로 인정됩니다");
+  if(youth==="yes"&&c.biz_type!=="법인")item.points.push("공동사업이면 손익분배비율이 가장 큰 사업자가 청년이어야 합니다");
+  if(youth==="yes")item.points.push("감면 기간 중에 청년 대표가 최대주주(법인)나 손익분배비율이 가장 큰 사업자(공동사업)가 아니게 되면 그 해부터 남은 기간은 청년이 아닌 비율로 내려갑니다");
   if(c.startup_type!=="new")item.points.push("새로 시작한 사업인지(인수, 법인 전환, 재개업이 아닌지) 확인이 필요합니다");
   if(String(c.industry_code||"").startsWith("94"))item.points.push("사업자등록 없이 일하는 프리랜서(인적용역)는 대상 여부를 따로 확인해야 합니다");
   if(reg.note)item.points.push(reg.note);
