@@ -32,6 +32,12 @@ function classifyOne(ksic,spec){
   const inc=hit(ksic,spec.ksic_include);if(inc!==null)return ["yes",inc];
   return ["no",""];
 }
+/* 빠지는 업종에 붙는 덧말(예: 커피전문점은 매출 구성 확인). 같은 말은 한 번만 */
+function excludeNotes(ksics,spec){
+  const out=[];
+  for(const k of ksics){const n=hit(k,spec.ksic_exclude_note);if(n&&!out.includes(n))out.push(n)}
+  return out;
+}
 function classify(ksics,spec){
   if(!ksics.length)return {state:"unknown",name:""};
   const rs=ksics.map(k=>classifyOne(k,spec)),states=rs.map(r=>r[0]);
@@ -123,6 +129,13 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
     item.points.push("감면 기간에 직원이 늘면 추가 감면을 받을 수 있는지도 함께 확인합니다");
     const ovD=S.employment_overlap_from===undefined?2025:S.employment_overlap_from,dm=/^(\d{4})/.exec(String(c.founded||""));
     if(reliefs.includes("employment")&&dm&&+dm[1]>=ovD)item.points.push(ovD+"년 이후 창업한 곳은 창업감면을 받는 해에 통합고용 세액공제를 함께 받을 수 없습니다. 같은 해 신고에 둘 다 들어가 있으면 확인이 필요합니다(조특법 127조④)");
+    const dc=classify(ksics,S);
+    if(dc.state==="no"){   /* 이미 받는데 업종이 대상이 아니면 나중에 감면이 취소될 수 있다 */
+      item.level="check";
+      item.headline="창업감면을 받고 있는데 업종이 대상이 아닐 수 있어 확인이 필요합니다"+(dc.name?" ("+dc.name+")":"");
+      item.points.unshift("실제 사업이 대상 업종이 아니면 감면이 취소되어 감면받은 세액과 가산세를 다시 낼 수 있습니다. 기본자료 업종이 실제 사업과 다른지부터 확인합니다");
+      item.points.push(...excludeNotes(ksics,S));
+    }
     return item;
   }
   const m=/^(\d{4})/.exec(String(c.founded||"")),fy=m?+m[1]:null;
@@ -136,6 +149,7 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   if(cls.state==="no"){
     item.level="none";item.headline="창업감면 대상 업종이 아닌 것으로 보입니다"+(cls.name?" ("+cls.name+")":"");
     item.points.push("대상 업종은 제조, 건설, 음식점, 통신판매, 정보통신, 전문·과학기술 서비스, 이용·미용, 수리업 등입니다. 도소매, 부동산, 일반 학원, 병·의원, 전문직은 빠집니다");
+    item.points.push(...excludeNotes(ksics,S));
     return item;
   }
   if(["takeover","conversion","reopen"].includes(c.startup_type)){
