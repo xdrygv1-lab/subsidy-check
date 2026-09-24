@@ -179,6 +179,11 @@ function ksicsOf(c){
   return lst.map(k=>String(k).replace(/\D/g,"")).filter(k=>k);
 }
 /* 손으로 옮긴 요건 하나를 회사 값과 견준다. true 맞음, false 안 맞음, null 회사 값을 몰라 말하지 않음 */
+/* 4대보험 고지내역의 고용보험 가입자 수(위하고 창이 숫자만 뽑아 줌, 2026-09-24 상권 허용). 없으면 null */
+function eiNum(c){const ei=c.insured_ei;return (ei&&typeof ei==="object")?num(ei.n):null}
+/* 위하고 직원 수를 모르는 곳: 고용보험 고지 인원이 있으면 그 숫자를 «확인할 것» 글에 붙이고, 없으면 모름. 상시근로자 수와 다를 수 있어 단정하지 않는다 */
+function eiOnly(c){const ei=eiNum(c);return ei===null?null:{k:"ei",v:ei}}
+
 function factCheck(ck,c){
   const t=ck.type,sales=num(c.sales_manwon);
   if(t==="sales_gt0")return sales===null?null:sales>0;
@@ -190,7 +195,7 @@ function factCheck(ck,c){
     if(ck.near&&Math.abs(v-ck.manwon)<=ck.manwon*ck.near)return {k:"near",v};   /* 기준선 가까이: 신고 매출의 기준이 조금만 달라도 뒤집힌다 */
     return t==="sales_lt"?v<ck.manwon:v<=ck.manwon}
   if(t==="small_biz"){
-    let n=num(c.insured);if(n===null)return null;
+    let n=num(c.insured);if(n===null)return eiOnly(c);
     const n0=n;
     if(ck.exclude_hired_since){const cnt=(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length;n-=ck.exclude_max?Math.min(cnt,ck.exclude_max):cnt}   /* 공고문이 «지원 대상 새 직원은 상시근로자 수에서 뺀다» 고 한 경우. 지원 대상이 되는 수까지만 뺀다 */
     const lim=SMALL10.has(sectionOf(c))?10:5;
@@ -214,7 +219,7 @@ function factCheck(ck,c){
     if(n!==null&&n>=ck.n)return (low!==null&&low<ck.n)?null:true;   /* 달리 세면 경계 아래로 내려가는 곳은 단정하지 않는다 */
     if(n!==null&&high!==null&&high>=ck.n)return null;   /* 달리 세면 경계 위로 올라가는 곳(원천세 인원은 4명인데 사원 목록은 5명 등)도 단정하지 않는다 */
     if((ck.unless_industry_flags||[]).some(f=>flagsOf(c).includes(f)))return {k:"maybe",v:null};   /* 업종 표시(K 지식서비스산업 등)는 참고용 어림이라 예외에 든다고 단정하지 않는다: «확인할 것» */
-    return n===null?null:false;
+    return n===null?eiOnly(c):false;
   }
   if(t==="sigungu_has"){const sg=String(c.sigungu||"").trim();return sg?placeHas(sg,ck.value):null}   /* 회사 시군구에 그 이름이 들어 있는가(제목에 구 이름이 없는 구청 사업) */
   if(t==="founded_by"){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||""));return m?(m[1]+"-"+String(+m[2]).padStart(2,"0"))<=ck.ym:null}
@@ -247,7 +252,7 @@ function factCheck(ck,c){
   }
   if(t==="trait")return (c.traits||[]).includes(ck.label)?true:null;
   if(t==="months_gte"){const ms=monthsSince(c.founded);return ms===null?null:ms>=ck.n}   /* 업력이 n개월 이상 */
-  if(t==="insured_lt"){const n2=num(c.insured);return n2===null?null:n2<ck.n}   /* 직원 수가 n명 미만인가 */
+  if(t==="insured_lt"){const n2=num(c.insured);return n2===null?eiOnly(c):n2<ck.n}   /* 직원 수가 n명 미만인가 */
   if(t==="youth_majority"){   /* 지금 일하는 직원의 과반수가 청년인가. 우리 표시는 34세 이하라 과반이면 39세 이하도 과반(맞음), 아니면 모름 */
     const on=c.hire_dates_on,youth=c.youth_hire_dates_on;
     if(on===undefined||on===null||youth===undefined||youth===null||!on.length)return null;
@@ -299,6 +304,8 @@ function factEvidence(ck,c){
     let s=n===null?"우리 직원 수: 모름":"우리 직원 "+Math.trunc(n)+"명";
     if(low!==null&&(n===null||Math.trunc(low)!==Math.trunc(n)))s+=", 작게 세면 "+Math.trunc(low)+"명";
     if(high!==null&&(n===null||Math.trunc(high)!==Math.trunc(n)))s+=", 크게 세면 "+Math.trunc(high)+"명";
+    const ei=eiNum(c);
+    if(ei!==null){const m=/^(\d{4})-(\d{1,2})/.exec(String((c.insured_ei||{}).ym||""));s+=", 고용보험 고지 "+Math.trunc(ei)+"명"+(m?"("+m[1]+"년 "+(+m[2])+"월)":"")}
     if(t==="small_biz"){
       const lim=SMALL10.has(sectionOf(c))?10:5;
       if(ck.exclude_hired_since)s+=" (새로 뽑은 "+(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length+"명은 빼고 셈)";
