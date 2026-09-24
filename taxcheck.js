@@ -78,13 +78,18 @@ function startupRates(reg,after2026){
 
 function employment(c,T,ksics,reg,reliefs,taxAmt){
   const E=T.employment,item={key:"employment",title:E.title,level:"check",headline:"",estimate:"",points:[],basis:E.basis||"조세특례제한법 제29조의7, 제29조의8"};
-  const exs=ksics.map(k=>hit(k,E.excluded_ksic)),allEx=ksics.length>0&&exs.every(x=>x!==null);
+  /* 업종코드가 있으면 업종코드로 먼저 가른다: 같은 표준분류 안에 빠지는 것과 아닌 것이 섞인 곳(단란주점, 안마시술소, 관광유흥음식점) */
+  const code=c.industry_code_sure===false?"":String(c.industry_code||"").replace(/\D/g,""),codeEx=(E.excluded_code||{})[code]||null,codeOk=(E.excluded_code_ok||{})[code]||null;
+  const exs=ksics.map(k=>codeOk?null:hit(k,E.excluded_ksic)),allEx=!!codeEx||(ksics.length>0&&exs.every(x=>x!==null));
+  const exName=codeEx||exs.find(x=>x!==null)||"";
+  const rbc=E.check_resolved_by_code||[];   /* 업종코드가 있으면 이미 가려지는 확인 거리(단란주점, 안마) */
+  const cks=(codeEx||codeOk)?[]:[...new Set(ksics.filter(k=>!(code&&rbc.some(p=>k.startsWith(p)))).map(k=>hit(k,E.check_ksic)))].filter(Boolean);
   const taken=reliefs.includes("employment")?"yes":(reliefs.includes("none")?"no":"unknown");
   const old=E.periods[0],p=E.periods[E.periods.length-1],r=reg.capital?p.capital:p.non_capital,ro=reg.capital?old.capital:old.non_capital;
   const n=Math.max(1,Math.floor(num(c.emp_increase_count)||1));
   const ovE=T.startup.employment_overlap_from===undefined?2025:T.startup.employment_overlap_from,fmE=/^(\d{4})/.exec(String(c.founded||""));
   const newStartup=reliefs.includes("startup")&&!!fmE&&+fmE[1]>=ovE;   /* 2025년 이후 창업 + 창업감면: 통합고용을 함께 못 받는다(127조④ 단서) */
-  if(allEx){item.level="none";item.headline="공제에서 빠지는 업종으로 보입니다 ("+exs[0]+")";return item}
+  if(allEx){item.level="none";item.headline="공제에서 빠지는 업종으로 보입니다 ("+exName+")";return item}
   if(c.emp_increase==="yes"){
     if(taken==="yes"){
       item.level="done";item.headline="이미 공제를 받으셨다면 직원 수 유지가 중요합니다";
@@ -122,6 +127,7 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
       item.points.push(ovE+"년 이후 창업한 곳은 창업감면과 통합고용 세액공제 가운데 하나만 받습니다(조특법 127조④, 2024.12.31 개정)");
     }
   }
+  for(const x of cks)item.points.push("업종 확인 필요: "+x);
   item.points.push(E.headcount_note);
   return item;
 }
