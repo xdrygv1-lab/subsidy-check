@@ -196,7 +196,8 @@ function smeSpecial(c,T,ksics,reg,reliefs,taxAmt){
     return item;
   }
   const wr=ksics.some(k=>P.wholesale_retail_medical_ksic.some(x=>k.startsWith(x)));
-  const rate=wr?P.rates.wholesale_retail_medical:(reg.capital?P.rates.capital:P.rates.non_capital);
+  let rate=wr?P.rates.wholesale_retail_medical:(reg.capital?P.rates.capital:P.rates.non_capital);
+  if(!wr&&ksics.some(k=>(P.half_rate_ksic||[]).some(x=>k.startsWith(x))))rate=rate/2;   /* 통관 대리 및 관련 서비스업: 감면율 x 100분의 50 (7조①2호 단서) */
   const sales=num(c.sales_manwon),smallSure=sales!==null&&sales<=P.small_company_safe_sales_manwon;
   item.level=(cls.state==="yes"&&smallSure)?"high":"check";
   item.headline=taxName+"의 "+rate+"%를 해마다 감면받을 가능성이 있습니다 (한도 연 "+man(P.cap_manwon)+"원)";
@@ -209,6 +210,9 @@ function smeSpecial(c,T,ksics,reg,reliefs,taxAmt){
     else item.points.push("매출이 "+man(P.small_company_safe_sales_manwon)+"원을 넘으면 업종별 소기업 기준을 따로 봐야 하고, 기준을 넘으면 감면율이 낮아지거나 대상에서 빠질 수 있습니다");
   }
   if(cls.state==="check")item.points.push("업종 확인 필요: "+cls.name);
+  const fm=/^(\d{4})/.exec(String(c.founded||"")),lr=P.long_run_years===undefined?10:P.long_run_years;
+  if(fm&&c.biz_type!=="법인"&&salesYear(c)-(+fm[1])>=lr)item.points.push("같은 업종을 "+lr+"년 넘게 해 왔고 종합소득금액 1억원 이하·성실사업자 요건을 갖추면 감면율에 "+(P.long_run_bonus_pct===undefined?110:P.long_run_bonus_pct)+"%를 곱합니다(조특법 7조②, 예: 30% → 33%)");
+  item.points.push("직원 수가 전년보다 줄면 한도가 "+man(P.cap_manwon)+"원에서 줄어든 1명당 "+man(P.cap_cut_per_person_manwon===undefined?500:P.cap_cut_per_person_manwon)+"원씩 내려갑니다");
   item.points.push("창업중소기업 세액감면과는 함께 받을 수 없어 둘 중 유리한 쪽을 고릅니다");
   item.points.push("대부분의 세무대리인이 기본으로 적용하지만 직접 신고했거나 업종이 바뀐 해에는 빠지는 일이 있습니다");
   return item;
