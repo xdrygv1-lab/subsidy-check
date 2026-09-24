@@ -56,6 +56,13 @@ function regionInfo(c,R){
   return {capital,over,note,depop:capital&&has(R.capital_depopulation)};
 }
 /* 창업감면율 [청년 아님, 청년, 매출 소액 특례]. 지역이 불확실하면 null */
+/* 매출이 몇 년 귀속인지: 입력한 sales_year, 없으면 매출 출처 글의 연도, 그것도 없으면 작년 */
+function salesYear(c){const y=num(c.sales_year);if(y)return Math.trunc(y);const m=/(20\d{2})년/.exec(String(c.sales_basis||""));return m?+m[1]:new Date().getFullYear()-1}
+/* 창업감면 6조⑥ 소규모 특례의 그 해 수입금액 기준(만원). 기준은 해마다 달랐다 */
+function smallLimit(S,year){const tbl=(S.small_revenue_by_year||[]).slice().sort((a,b)=>a.from-b.from);if(!tbl.length)return S.small_revenue_manwon;let lim=tbl[0].manwon;for(const t of tbl)if(year>=t.from)lim=t.manwon;return lim}
+/* «2022~2025년 8,000만원, 2026년부터 1억 400만원» 처럼 since 해부터의 기준을 한 줄로 */
+function smallDesc(S,since){const tbl=(S.small_revenue_by_year||[]).slice().sort((a,b)=>a.from-b.from),out=[];
+  tbl.forEach((t,i)=>{const nxt=i+1<tbl.length?tbl[i+1].from:null;if(nxt!==null&&nxt-1<since)return;const a=Math.max(t.from,since);out.push(nxt!==null?(a===nxt-1?a+"년":a+"~"+(nxt-1)+"년")+" "+man(t.manwon)+"원":a+"년부터 "+man(t.manwon)+"원")});return out.join(", ")}
 function startupRates(reg,after2026){
   if(reg.over==="partial"||reg.over==="unknown")return null;
   if(!after2026)return reg.over==="no"?[50,100,100]:[0,50,50];
@@ -142,7 +149,7 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
     if(c.ceo_age_band==="le34"){youth="yes";usedBand=true}
     else if(c.ceo_age_band==="35to39"){youth=(39-fullYears<=S.youth_age_max)?"yes":"maybe";usedBand=true}
   }
-  const rates=startupRates(reg,fy>=2026),sales=num(c.sales_manwon),small=sales!==null&&sales<=S.small_revenue_manwon;
+  const rates=startupRates(reg,fy>=2026),sales=num(c.sales_manwon),sy=salesYear(c),lim=smallLimit(S,sy),small=sales!==null&&sales<=lim;
   let rate=null,usedSmall=false;
   if(rates){
     rate=youth==="yes"?rates[1]:(youth==="no"?rates[0]:null);
@@ -150,7 +157,7 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   }
   if(rate===0){
     item.level="none";item.headline="과밀억제권역 안에서 청년이 아닌 대표가 창업한 경우는 감면이 없습니다";
-    item.points.push("연 매출이 "+man(S.small_revenue_manwon)+"원 이하인 해는 "+rates[2]+"% 감면 특례가 있습니다");
+    item.points.push("그 해 매출이 기준("+smallDesc(S,T.refund_years[0])+") 이하인 해는 "+rates[2]+"% 감면 특례가 있습니다");
     return item;
   }
   item.level=(cls.state==="yes"&&rate!==null&&c.startup_type==="new")?"high":"check";
@@ -159,7 +166,9 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   else item.headline="사업장 위치와 대표자 나이에 따라 "+taxName+"의 50~100%를 감면받을 가능성이 있습니다";
   if(rate!==null&&taxAmt!==null&&taxAmt>0)item.estimate="작년에 낸 세금이 "+man(taxAmt)+"원이라면 1년에 약 "+man(taxAmt*rate/100)+"원";
   item.points.push("감면은 처음 소득이 생긴 해부터 "+S.period_years+"년입니다. 창업한 해부터라면 "+fy+"~"+lastYear+"년이고, 지난 연도분은 경정청구로 돌려받을 수 있습니다");
-  if(usedSmall)item.points.push("연 매출 "+man(S.small_revenue_manwon)+"원 이하 창업 특례("+rate+"%)를 적용했습니다. 매출 기준은 연도마다 달라 해마다 따로 확인합니다");
+  if(usedSmall)item.points.push(sy+"년 매출이 그 해 기준 "+man(lim)+"원 이하라 창업 특례("+rate+"%)를 적용했습니다. 기준은 해마다 다릅니다("+smallDesc(S,T.refund_years[0])+")");
+  else if(rates&&sales!==null&&youth!=="yes"&&sales>lim&&rates[2]>(rate||0)&&sales<=smallLimit(S,9999)&&sy<Math.max(...(S.small_revenue_by_year||[{from:0}]).map(t=>t.from)))
+    item.points.push(sy+"년 매출은 그 해 기준 "+man(lim)+"원을 넘지만, 기준이 "+smallDesc(S,sy+1)+"으로 올라 그 안인 해는 창업 특례("+rates[2]+"%)가 될 수 있습니다");
   if(cls.state==="check")item.points.push("업종 확인 필요: "+cls.name);
   if(cls.state==="unknown")item.points.push("종목을 고르면 대상 업종인지 함께 판정합니다");
   if(usedBand)item.points.push("대표자 나이는 출생연도가 아니라 사무실 자료의 나이 표시(만 "+(c.ceo_age_band==="le34"?"34세 이하":"35~39세")+")로 판정했습니다");
