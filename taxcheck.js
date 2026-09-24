@@ -86,6 +86,12 @@ function employment(c,T,ksics,reg,reliefs,taxAmt){
     }
     item.level="high";
     item.headline=taken==="no"?"받지 않은 고용 세액공제를 돌려받을 가능성이 있습니다":"고용 세액공제 대상일 가능성이 있습니다";
+    const ovE=T.startup.employment_overlap_from===undefined?2025:T.startup.employment_overlap_from,fmE=/^(\d{4})/.exec(String(c.founded||""));
+    if(reliefs.includes("startup")&&fmE&&+fmE[1]>=ovE){   /* 2025년 이후 창업: 창업감면을 받는 해에는 통합고용 공제를 함께 못 받는다(127조④ 단서) */
+      item.level="check";
+      item.headline="창업감면을 받는 해에는 고용 세액공제를 함께 받을 수 없어, 둘 중 어느 쪽이 유리한지 견줘 봐야 합니다";
+      item.points.push(ovE+"년 이후 창업한 곳은 창업감면과 통합고용 세액공제 가운데 하나만 받습니다(조특법 127조④, 2024.12.31 개정)");
+    }
     /* 우리 거래처(source 가 client)의 공제 금액은 이 방에서 계산하지 않는다. 금액은 전수검사로 검증한 계산기 결과와 위하고 신고액 한 곳에서만 정한다.
        공개 페이지에서 들어온 회사에는 법정 단가에 늘어난 인원을 곱한 어림 범위만 보여 준다. */
     const isClient=c.source==="client";
@@ -115,6 +121,8 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   if(reliefs.includes("startup")){
     item.level="done";item.headline="이미 적용 중이라면 감면 기간("+S.period_years+"년)이 끝나는 해를 챙기면 됩니다";
     item.points.push("감면 기간에 직원이 늘면 추가 감면을 받을 수 있는지도 함께 확인합니다");
+    const ovD=S.employment_overlap_from===undefined?2025:S.employment_overlap_from,dm=/^(\d{4})/.exec(String(c.founded||""));
+    if(reliefs.includes("employment")&&dm&&+dm[1]>=ovD)item.points.push(ovD+"년 이후 창업한 곳은 창업감면을 받는 해에 통합고용 세액공제를 함께 받을 수 없습니다. 같은 해 신고에 둘 다 들어가 있으면 확인이 필요합니다(조특법 127조④)");
     return item;
   }
   const m=/^(\d{4})/.exec(String(c.founded||"")),fy=m?+m[1]:null;
@@ -166,6 +174,9 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
   else item.headline="사업장 위치와 대표자 나이에 따라 "+taxName+"의 50~100%를 감면받을 가능성이 있습니다";
   if(rate!==null&&taxAmt!==null&&taxAmt>0)item.estimate="작년에 낸 세금이 "+man(taxAmt)+"원이라면 1년에 약 "+man(taxAmt*rate/100)+"원";
   item.points.push("감면은 처음 소득이 생긴 해부터 "+S.period_years+"년입니다. 창업한 해부터라면 "+fy+"~"+lastYear+"년이고, 지난 연도분은 경정청구로 돌려받을 수 있습니다");
+  const ov=S.employment_overlap_from===undefined?2025:S.employment_overlap_from;
+  if(fy>=ov)item.points.push(ov+"년 이후 창업한 곳은 창업감면을 받는 해에 통합고용 세액공제를 함께 받을 수 없어 둘 중 유리한 쪽을 고릅니다(조특법 127조④, 2024.12.31 개정)");
+  else item.points.push((ov-1)+"년까지 창업한 곳은 창업감면과 통합고용 세액공제를 같은 해에 함께 받을 수 있습니다. 직원이 늘어 받는 추가 감면(6조⑦)을 받는 해만 둘 중 하나를 고릅니다");
   if(usedSmall)item.points.push(sy+"년 매출이 그 해 기준 "+man(lim)+"원 이하라 창업 특례("+rate+"%)를 적용했습니다. 기준은 해마다 다릅니다("+smallDesc(S,T.refund_years[0])+")");
   else if(rates&&sales!==null&&youth!=="yes"&&sales>lim&&rates[2]>(rate||0)&&sales<=smallLimit(S,9999)&&sy<Math.max(...(S.small_revenue_by_year||[{from:0}]).map(t=>t.from)))
     item.points.push(sy+"년 매출은 그 해 기준 "+man(lim)+"원을 넘지만, 기준이 "+smallDesc(S,sy+1)+"으로 올라 그 안인 해는 창업 특례("+rates[2]+"%)가 될 수 있습니다");
