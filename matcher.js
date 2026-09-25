@@ -395,7 +395,7 @@ function matchNotices(c,notices,needsDef,limit){
   const sectors=RULES.notice_sectors||[],expKw=RULES.export_keywords||[],expTrait=RULES.export_trait||"",ksics=ksicsOf(c);
   const wantsExport=(c.needs||[]).includes("수출")||(c.traits||[]).includes(expTrait);
   const excludes=RULES.notice_excludes||{},local=RULES.local_title||null,facts=RULES.notice_facts||[];
-  const tech=RULES.tech_startup||null;
+  const tech=RULES.tech_startup||null,mu=RULES.market_unfit||null;
   const sidoRe=(local&&(local.sido_names||[]).length)?new RegExp("(?:^|[\\s(\\[\\-ㆍ·,])("+local.sido_names.join("|")+")(?=[\\s)\\],ㆍ·]|광역시|특별|시\\s|도\\s|권\\s|지역|$)"):null;
   const today=todayISO(),wanted=(c.needs&&c.needs.length)?c.needs:needsDef.map(n=>n.key);
   const needs=needsDef.filter(n=>wanted.includes(n.key)),sido=c.sido||"",small=isSmallBiz(c);
@@ -458,6 +458,8 @@ function matchNotices(c,notices,needsDef,limit){
       let t2=title;(tech.strip||[]).forEach(w=>{t2=t2.split(w).join("")});
       if(tech.keywords.some(k=>t2.includes(k))&&!ksics.some(k=>tech.ksic_ok.some(px=>k.startsWith(px)))&&!(c.traits||[]).some(t=>tech.traits_ok.includes(t))){score-=tech.penalty||0;flags.push(tech.flag)}
     }
+    /* 판로·홍보 공고: 회사 업종이 모두 부동산 임대·중개(68)면 팔 상품이 없어 쓸 일이 적다. 감점하고 표시(단정하지 않음) */
+    if(mu&&ksics.length&&(mu.kinds||[]).includes((it.ease||{}).kind)&&ksics.every(k=>(mu.ksic||[]).some(px=>k.startsWith(px)))){score-=mu.penalty||0;flags.push(mu.flag)}
     /* 제목에 [시도] 표시 없이 시·군 이름만 적힌 공고: 회사 시군구와 다르면 감점하고 표시 (다른 지역 사람을 부르는 관광객 유치 사업은 그대로) */
     if(local&&!(it.sido||[]).length&&!(local.skip_if_title_has||[]).some(w=>title.includes(w))){
       const lm=/(?:^|\s)([가-힣]{2,4}(?:시|군))(?=\s)/.exec(title.slice(0,30));
