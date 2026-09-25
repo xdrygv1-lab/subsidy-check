@@ -417,8 +417,9 @@ function matchNotices(c,notices,needsDef,limit){
     const traitHit=[];let traitTitle=false;
     for(const t of TRAITS){
       if(!(c.traits||[]).includes(t.label))continue;
-      if(t.keywords.some(k=>title.includes(k))){score+=3;traitTitle=true;traitHit.push(t.label)}
-      else if(t.keywords.some(k=>body.includes(k))){score+=1;traitHit.push(t.label)}
+      let tt=title,bb=body;(t.strip||[]).forEach(w=>{tt=tt.split(w).join("");bb=bb.split(w).join("")});   /* 부처·기관 이름 속 글자는 지우고 찾는다 */
+      if(t.keywords.some(k=>tt.includes(k))){score+=3;traitTitle=true;traitHit.push(t.label)}
+      else if(t.keywords.some(k=>bb.includes(k))){score+=1;traitHit.push(t.label)}
     }
     if(!hit.length&&!traitTitle)continue;
     if(!hit.length)hit.push("우대 조건");
