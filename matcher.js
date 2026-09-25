@@ -436,7 +436,7 @@ function matchNotices(c,notices,needsDef,limit){
       else if(title.includes("소상공인")){score-=3;flags.push("소상공인 전용일 수 있음")}
     }
     /* 업종을 이름에 밝힌 공고: 회사 업종을 아는데 그 업종이 아니면 감점, 그 업종이면 가점 */
-    const named=sectors.filter(sc=>sc.keywords.some(k=>title.includes(k)));
+    const named=sectors.filter(sc=>sc.keywords.some(k=>title.includes(k))&&!(sc.not||[]).some(w=>title.includes(w)));
     if(named.length&&ksics.length){
       if(named.some(sc=>sc.ksic.some(px=>ksics.some(k=>k.startsWith(px))))){score+=2;reasons.push("업종: "+named[0].name)}
       else{score-=4;flags.push(named[0].name+" 업종 대상일 수 있음")}
