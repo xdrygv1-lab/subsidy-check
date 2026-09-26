@@ -87,7 +87,7 @@ function evalYouthLeap(prog,c,notices){
 
   const text=c.industry_text||"",liquor=iflags.includes("L"),indirect=iflags.includes("I")||INDIRECT_WORDS.some(w=>text.includes(w));
   if(iflags.includes("X")||EXCLUDED_WORDS.some(w=>text.includes(w)))add("industry","fail",`지원 제외 업종으로 보임 (${text})`);
-  else if(liquor)add("industry","check","소비·향락업(기타 주점업, 무도장, 사행시설 등)은 지원 제외 업종일 수 있음. 운영지침 확인 필요");
+  else if(liquor)add("industry","check","소비·향락업 등(기타 주점업, 노래연습장, PC방·게임장, 비디오감상실, 여관·민박 등 숙박업, 사행시설·복권, 무도장, 목욕장·이용업 일부)은 지원 제외 업종일 수 있음(지침 21쪽·별첨9, 호텔업·휴양콘도는 가능). 운영기관 확인 필요");
   else if(indirect)add("industry","check","인력공급·경비·시설관리업은 간접고용 형태 채용자가 제외됨");
   else add("industry","pass","제외 업종 아님 (입력 기준)");
 
