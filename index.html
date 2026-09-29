@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>우리 회사 지원금 확인</title>
-<meta name="description" content="지역, 직원 수, 업종만 넣으면 받을 수 있는 지원금과 더 낸 세금을 돌려받을 가능성을 바로 확인합니다. 세무회계홍인.">
+<meta name="description" content="지역, 직원 수, 업종만 넣으면 받을 수 있는 지원금과 더 낸 세금을 돌려받을 가능성을 바로 확인합니다. 세무회계홍인 · 세무사 조상권.">
 <meta name="theme-color" content="#0B1B3A">
 <meta property="og:type" content="website">
-<meta property="og:title" content="돌려받을 세금과 지원금, 한 번에 확인">
-<meta property="og:description" content="연락처 없이 1분. 우리 회사에 맞는 지원금과 더 낸 세금을 돌려받을 가능성을 바로 확인하세요. 세무회계홍인">
+<meta property="og:title" content="돌려받을 수 있는 세금과 지원금, 한 번에 확인">
+<meta property="og:description" content="연락처 없이 1분. 우리 회사에 맞는 지원금과 더 낸 세금을 돌려받을 가능성을 바로 확인하세요. 세무회계홍인 · 세무사 조상권">
 <meta property="og:image" content="https://xdrygv1-lab.github.io/subsidy-check/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1B3A'/%3E%3Ctext x='32' y='45' font-size='36' font-weight='700' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E%ED%99%8D%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -48,6 +48,7 @@ a{color:var(--accent)}
 .topbar a{margin-left:auto;color:var(--band-ink);text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px;font-weight:700}
 .topbar a:hover{background:rgba(255,255,255,.1)}
 @media (max-width:520px){.topbar .tagline{display:none}}
+.topbar .taxpro{font-size:13px;opacity:.85;margin-left:6px;white-space:nowrap}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:40px;align-items:center;padding-top:40px}
 @media (max-width:880px){.hero{grid-template-columns:minmax(0,1fr);gap:24px;padding-top:28px}}
 .eyebrow{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.02em;color:#9DB6FF}
@@ -264,11 +265,11 @@ footer a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 </head>
 <body>
 <header class="band gut">
-  <div class="topbar"><strong class="firm"></strong><span class="tagline">세무사가 직접 검토합니다</span><a id="firmTel" hidden></a></div>
+  <div class="topbar"><strong class="firm"></strong><span class="taxpro"></span><span class="tagline">세무사가 직접 검토합니다</span><a id="firmTel" hidden></a></div>
   <div class="hero">
     <div class="hero-text">
       <p class="eyebrow">사업자를 위한 1분 확인</p>
-      <h1 id="siteTitle">돌려받을 세금과 지원금, 한 번에 확인</h1>
+      <h1 id="siteTitle">돌려받을 수 있는 세금과 지원금, 한 번에 확인</h1>
       <p id="siteSub">지역, 직원 수, 업종만 넣으면 우리 회사가 받을 수 있는 지원금과 더 낸 세금을 돌려받을 가능성을 바로 보여 드립니다.</p>
       <ul class="perks"><li>연락처 없이 바로 확인</li><li>빠른 확인은 저장되지 않음</li><li>세무사가 직접 검토</li></ul>
       <div class="cta"><a class="herobtn" href="#f">지금 확인하기</a><a class="herobtn ghost" href="#browse">지원사업 둘러보기</a></div>
@@ -479,7 +480,7 @@ footer a{color:inherit;text-decoration:underline;text-underline-offset:3px}
   <section class="panel faqcol faq" aria-label="자주 묻는 질문">
     <h2>자주 묻는 질문</h2>
     <div class="acc">
-      <details open><summary>비용이 드나요?</summary><p>확인은 무료입니다. 결과를 보고 세금 환급 검토를 맡기고 싶으시면 상담에서 진행 방법을 안내해 드립니다.</p></details>
+      <details open><summary>비용이 드나요?</summary><p>이 화면에서 확인하는 데는 비용이 들지 않습니다. 세금 환급 검토를 맡기시면 보수와 진행 방법을 상담에서 먼저 알려 드립니다.</p></details>
       <details><summary>지원금 신청도 해 주나요?</summary><p>지원금 신청은 대표님이 운영기관에 직접 하십니다. 저희는 회사가 요건에 맞는지, 무엇을 확인해야 하는지 알려 드립니다.</p></details>
       <details><summary>입력한 정보는 어떻게 되나요?</summary><p>빠른 확인은 이 화면 안에서만 계산하고 저장하지 않습니다. 자세한 결과를 받을 때 동의하신 내용만 사무소가 보관하고, 동의를 철회하시면 지체 없이 지웁니다.</p></details>
       <details><summary>결과는 확정인가요?</summary><p>아닙니다. 공고문의 기본 요건으로 본 1차 확인입니다. 지원금은 운영기관 심사로, 세금 환급은 신고서 검토로 확정됩니다.</p></details>
@@ -490,7 +491,7 @@ footer a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 
 <footer class="gut">
   <p>공고 자료 출처: 기업마당(bizinfo.go.kr). 판정은 공고문의 기본요건만으로 본 1차 선별이며, 최종 자격은 사업운영 지침과 관할 운영기관 심사로 확정됩니다.</p>
-  <p><span class="firm"></span> · <a href="privacy.html">개인정보 처리방침</a></p>
+  <p><span class="firm"></span> · <span class="taxpro"></span> · <a href="privacy.html">개인정보 처리방침</a></p>
 </footer>
 
 <script src="config.js"></script>
@@ -572,7 +573,7 @@ function renderTeaser(){
     <p class="subh">세금과 청년 고용 지원금</p>
     <ul class="tz">${rows.join("")}</ul>
     <div class="money"><strong style="font-size:17px">어떤 공고인지, 왜 그런지 궁금하다면</strong>
-      <p class="hint" style="margin-top:4px">2단계에 연락처를 남기면 공고 이름과 받을 수 있는 금액, 요건을 회사 값과 한 줄씩 맞춘 확인표를 바로 보여 드립니다. ${esc(CFG.FIRM_NAME||"")}의 세무사가 직접 검토합니다.</p>
+      <p class="hint" style="margin-top:4px">2단계에 연락처를 남기면 공고 이름과 받을 수 있는 금액, 요건을 회사 값과 한 줄씩 맞춘 확인표를 바로 보여 드립니다. ${esc(CFG.FIRM_NAME||"")} ${esc(CFG.TAX_ACCOUNTANT||"세무사")}가 직접 검토합니다.</p>
       <div class="sumlinks"><button type="button" class="primary" id="goStep2">자세한 결과 받기</button></div></div>
     <p class="hint" style="margin-top:12px">이 결과는 입력한 내용만으로 미리 살펴본 참고용이고, 여기까지는 입력한 내용이 어디에도 저장되지 않습니다.</p>`;
   $("#teaser").hidden=false;$("#intro").hidden=true;teaserOn=true;
@@ -600,7 +601,7 @@ function render(){
     <section class="panel">
       <div class="verdict"><h2>${esc(p.name)}</h2><span class="badge ${p.level}">${esc(p.verdict)}</span></div>
       <p class="hint" style="margin-top:4px">${esc(p.ministry)} · ${esc(p.type.key)} 유형 · ${esc(p.type.who)}</p>
-      ${p.estimate?`<div class="money">예상 기업 지원금 <strong>최대 ${won(p.estimate.company_manwon)}만원</strong> (청년 ${p.estimate.heads}명 기준)<p class="hint">${esc(p.estimate.note)}</p>${p.estimate.youth_note?`<p class="hint">${esc(p.estimate.youth_note)}</p>`:""}</div>`:""}
+      ${p.estimate?`<div class="money">요건을 갖추고 승인되면 기업 지원금 <strong>최대 ${won(p.estimate.company_manwon)}만원</strong> (청년 ${p.estimate.heads}명 기준)<p class="hint">${esc(p.estimate.note)}</p>${p.estimate.youth_note?`<p class="hint">${esc(p.estimate.youth_note)}</p>`:""}</div>`:""}
       <ul class="cond">${p.conditions.map(c=>`<li><span class="st ${c.status}">${ST[c.status]}</span><div><div class="t">${esc(c.label)}</div><div class="m">${esc(c.message)}</div>${c.detail?`<details class="d"><summary>기준 자세히</summary><p>${esc(c.detail)}</p></details>`:""}</div></li>`).join("")}</ul>
       <details ${p.related.length?"open":""}><summary>관할 운영기관 공고 ${p.related.length}건</summary>
         ${p.related.map(n=>`<div class="nc" style="margin-top:8px"><div class="nc-t" style="margin:0"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a></div><div class="nc-meta"><span class="tag ${n.scope==="관할 일치"?"good":""}">${esc(n.scope)}</span> ${esc(n.agency||"")} · ${esc(n.period||"")}${n.contact?" · "+esc(n.contact):""}</div>${linksHTML(n)}</div>`).join("")||'<p class="hint" style="margin-top:8px">현재 기업마당에 이 지역 운영기관 공고가 없습니다. 고용24에서 운영기관을 직접 검색하세요.</p>'}
@@ -795,6 +796,7 @@ async function onSubmit(){
 /* ---------- 시작 ---------- */
 document.title=CFG.SITE_TITLE||document.title;$("#siteTitle").textContent=CFG.SITE_TITLE||$("#siteTitle").textContent;
 document.querySelectorAll(".firm").forEach(e=>e.textContent=CFG.FIRM_NAME||"");
+document.querySelectorAll(".taxpro").forEach(e=>{e.textContent=CFG.TAX_ACCOUNTANT||"";e.hidden=!CFG.TAX_ACCOUNTANT});
 $("#firmContact").textContent=CFG.FIRM_CONTACT?" (문의: "+CFG.FIRM_CONTACT+")":"";
 $("#retention").textContent=CFG.RETENTION||"";$("#mretention").textContent=CFG.MARKETING_RETENTION||"";
 $("#sido").innerHTML='<option value="">시도 선택</option>'+SIDO.map(s=>`<option>${s}</option>`).join("");

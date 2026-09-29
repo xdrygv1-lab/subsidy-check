@@ -3,9 +3,10 @@ window.SITE_CONFIG = {
   // 구글 Apps Script 웹 앱 주소 (구글드라이브_연결방법.md 참고). 비어 있으면 제출 내용이 저장되지 않는 시험 모드로 동작한다.
   SUBMIT_URL: "https://script.google.com/macros/s/AKfycbydbuoK4GgBk54XaTuvtCIyqa_Z6RUX6KQtNkbgMvFk231I7dcR7Sgtm9jDtpOcuqP0QQ/exec",
 
-  SITE_TITLE: "돌려받을 세금과 지원금, 한 번에 확인",
+  SITE_TITLE: "돌려받을 수 있는 세금과 지원금, 한 번에 확인",
   FIRM_TEL: "062-710-4722",          // 첫 화면의 전화 걸기 단추. 비우면 단추가 안 나온다
   FIRM_NAME: "세무회계홍인",
+  TAX_ACCOUNTANT: "세무사 조상권",   // 세무사법 제12조의7·시행령 제33조: 광고에는 사무소명과 등록 세무사 성명을 함께 (2026-09-29)
   FIRM_CONTACT: "062-710-4722 / jsktax0509@naver.com",               // 예: "02-000-0000 / help@example.com" (개인정보 문의처로 동의문에 표시)
 
   // 동의문에 들어가는 값
