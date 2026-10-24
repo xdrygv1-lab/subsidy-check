@@ -145,6 +145,17 @@ function smallTable(P,year){
 function startup(c,T,ksics,reg,reliefs,taxAmt){
   const S=T.startup,item={key:"startup",title:S.title,level:"check",headline:"",estimate:"",points:[],basis:"조세특례제한법 제6조"};
   const taxName=c.biz_type==="법인"?"법인세":(c.biz_type==="개인"?"소득세":"소득세·법인세");
+  /* 사무소가 확정한 창업 여부(같은경영자_확정_틀.json 의 startup_by_biz). no = 창업 아님, yes = 창업 판단 유지 */
+  const dec=c.startup_decided,dnote=String(c.startup_decided_note||"");
+  if(dec==="no"){
+    if(reliefs.includes("startup")){
+      item.level="check";item.headline="창업감면을 받고 있는데 사무소가 창업이 아니라고 확정한 곳이라 감면을 바로잡아야 할 수 있습니다";
+      item.points.push("감면이 취소되면 감면받은 세액과 가산세를 다시 낼 수 있습니다. 신고서와 기본자료를 함께 확인합니다");
+    }else{item.level="none";item.headline="사무소가 창업이 아니라고 확정한 곳이라 창업감면 대상이 아닙니다"}
+    if(dnote)item.points.push(dnote);
+    return item;
+  }
+  if(dec==="yes"&&dnote)item.points.push(dnote);
   if(reliefs.includes("startup")){
     item.level="done";item.headline="이미 적용 중이라면 감면 기간("+S.period_years+"년)이 끝나는 해를 챙기면 됩니다";
     item.points.push("감면 기간에 직원이 늘면 추가 감면을 받을 수 있는지도 함께 확인합니다");
@@ -160,7 +171,7 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
       item.points.unshift("실제 사업이 대상 업종이 아니면 감면이 취소되어 감면받은 세액과 가산세를 다시 낼 수 있습니다. 기본자료 업종이 실제 사업과 다른지부터 확인합니다");
       item.points.push(...excludeNotes(ksics,S));
     }
-    const esi=num(c.earlier_same_item);
+    const esi=dec!=="yes"?num(c.earlier_same_item):null;
     if(esi!==null&&esi>=1){   /* 6조⑩4호: 사업 확장은 창업이 아니다(대표자 이름으로 묶은 값이라 동명이인일 수 있다) */
       if(item.level==="done"){item.level="check";item.headline="창업감면을 받고 있는데 사업을 넓힌 것이면 창업이 아니어서 확인이 필요합니다"}
       item.points.push("같은 대표자 이름으로 같은 종목 사업장을 먼저 연 곳이 우리 거래처에 "+esi+"곳 있습니다. 사업을 넓힌 것이면 창업으로 보지 않아(조특법 6조⑩4호) 감면이 취소될 수 있습니다. 동명이인일 수 있으니 확인합니다");
@@ -212,7 +223,7 @@ function startup(c,T,ksics,reg,reliefs,taxAmt){
     return item;
   }
   item.level=(cls.state==="yes"&&rate!==null&&c.startup_type==="new")?"high":"check";
-  const esiC=num(c.earlier_same_item);
+  const esiC=dec!=="yes"?num(c.earlier_same_item):null;
   if(esiC!==null&&esiC>=1){
     item.level="check";
     item.points.push("같은 대표자 이름으로 같은 종목 사업장을 먼저 연 곳이 우리 거래처에 "+esiC+"곳 있어, 사업을 넓힌 것이면 창업으로 보지 않습니다(조특법 6조⑩4호). 동명이인일 수 있으니 확인합니다");
