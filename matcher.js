@@ -14,7 +14,13 @@ const hintOf=c=>c.industry_hint||{};
 const codeOf=c=>String(c.industry_code||"").replace(/\D/g,"");
 const infoOf=c=>IND.by_code[codeOf(c)]||null;
 const flagsOf=c=>hintOf(c).f!==undefined?String(hintOf(c).f||""):((infoOf(c)||{}).f||"");
-function sectionOf(c){return hintOf(c).section||(infoOf(c)||{}).s||""}
+/* 표준산업분류 앞 두 자리 → 대분류. 업종코드가 비고 종목의 표준산업분류만 있는 곳을 위해(2026-10-31). matcher.py 의 _section_of_ksic 와 같다 */
+const KSIC_SECTION=[[1,3,"A"],[5,8,"B"],[10,34,"C"],[35,35,"D"],[36,39,"E"],[41,42,"F"],[45,47,"G"],[49,52,"H"],[55,56,"I"],[58,63,"J"],[64,66,"K"],[68,68,"L"],[70,73,"M"],[74,76,"N"],[84,84,"O"],[85,85,"P"],[86,87,"Q"],[90,91,"R"],[94,96,"S"],[97,98,"T"],[99,99,"U"]];
+function sectionOfKsic(code){const d=String(code||"").replace(/\D/g,"");if(d.length<2)return "";const n=+d.slice(0,2);const r=KSIC_SECTION.find(([lo,hi])=>lo<=n&&n<=hi);return r?r[2]:""}
+/* 업태 글자(«업태 / 종목» 앞쪽)의 낱말 → 대분류. 종목 코드보다 먼저 본다(업태 건설업인데 종목이 인테리어디자인으로 잡힌 곳). matcher.py 의 _section_of_upte 와 같다 */
+const UPTE_SECTION=[["농업","A"],["임업","A"],["어업","A"],["광업","B"],["제조","C"],["건설","F"],["도매","G"],["소매","G"],["운수","H"],["운송","H"],["창고","H"],["숙박","I"],["음식","I"],["정보통신","J"],["출판","J"],["금융","K"],["보험","K"],["부동산","L"],["전문, 과학","M"],["전문과학","M"],["사업시설","N"],["사업지원","N"],["교육","P"],["보건","Q"],["사회복지","Q"],["예술","R"],["스포츠","R"],["여가","R"],["협회","S"],["수리","S"]];
+function sectionOfUpte(c){const t=String(c.industry_upte||String(c.industry_text||"").split(" / ")[0]);const h=UPTE_SECTION.filter(([w])=>t.includes(w)).map(([w,s])=>[t.indexOf(w),s]).sort((a,b)=>a[0]-b[0]||(a[1]<b[1]?-1:a[1]>b[1]?1:0));return h.length?h[0][1]:""}
+function sectionOf(c){return hintOf(c).section||(infoOf(c)||{}).s||sectionOfUpte(c)||sectionOfKsic(c.industry_ksic)||""}
 const prefixHit=(code,table)=>{if(!code)return null;for(const k of Object.keys(table))if(code.startsWith(k))return k+" "+table[k];return null};
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysLeft(end){const a=end.split("-").map(Number),t=todayISO().split("-").map(Number);return Math.round((Date.UTC(a[0],a[1]-1,a[2])-Date.UTC(t[0],t[1]-1,t[2]))/86400000)}
