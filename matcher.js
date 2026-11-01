@@ -128,12 +128,19 @@ function evalYouthLeap(prog,c,notices){
     if(pay!==null&&pay>p.avg_monthly_pay_max_manwon)bad.push(`월 급여 ${won(pay)}만원이 기준 ${p.avg_monthly_pay_max_manwon}만원을 넘음`);
     if(hours!==null&&hours<p.weekly_hours_min)bad.push(`주 ${hours}시간은 기준 ${p.weekly_hours_min}시간에 못 미침`);
     /* 지침 30쪽: 최저임금 이상이면서 평균 월 급여 450만원 이하. 월급 하한 숫자는 없어 그 사람의 주 소정근로시간 기준 최저임금 월 환산(주휴 포함, 만원)과 견준다. 주 15시간 미만은 주휴가 없다 */
-    const mw=p.min_wage_hourly_won,floorManwon=h=>{const hh=Math.min(h,40);return (hh+(hh>=15?hh/40*8:0))*365/7/12*mw/10000};
+    const mw=p.min_wage_hourly_won,mwNext=p.min_wage_next_hourly_won,floorManwon=(h,w)=>{const hh=Math.min(h,40);return (hh+(hh>=15?hh/40*8:0))*365/7/12*(w||mw)/10000};
     if(bad.length)add("work","fail",bad.join(". "));
     else if(pay!==null&&hours!==null){
       /* 못 미쳐 보여도 수습 감액, 산입 범위, 최저임금법 제7조 적용제외가 있어 탈락이라 단정하지 않는다 */
       if(mw&&pay<floorManwon(hours)-1)add("work","check",`월 급여 ${won(pay)}만원이 주 ${hours}시간 기준 최저임금 월 환산 약 ${won(Math.floor(floorManwon(hours)+0.5))}만원에 못 미쳐 보임. 수습 감액, 임금에 넣는 범위, 최저임금 적용제외 여부를 확인`);
-      else add("work","pass",`월 급여 ${won(pay)}만원, 주 ${hours}시간으로 조건 충족 (입력 기준)`);
+      else{
+        /* 지원은 채용 뒤 12개월이라 다음 해 1월부터는 오른 최저임금을 줘야 한다(못 주면 최저임금법 위반) */
+        /* 월 최저임금(원). 월 시간은 시간 단위로 올림(주 40시간 = 209시간, 고시 월 환산 2,236,300원과 같음). 대표가 맞출 금액이라 낮게 읽히지 않게. matcher.py 의 month_won 과 같다 */
+        const monthWon=(h,w)=>{const hh=Math.min(h,40);return Math.ceil((hh+(hh>=15?hh/40*8:0))*365/7/12-1e-9)*w};
+        const nw=mwNext?monthWon(hours,mwNext):0;
+        const nx=(nw&&pay*10000<nw)?`. ${p.min_wage_next_year}년 1월부터 최저임금이 시급 ${won(mwNext)}원으로 올라 주 ${hours}시간이면 월 ${won(nw)}원 이상(약 ${won(Math.ceil(nw/10000))}만원)으로 올려야 함`:"";
+        add("work","pass",`월 급여 ${won(pay)}만원, 주 ${hours}시간으로 조건 충족 (입력 기준)${nx}`);
+      }
     }
     else if(pay!==null&&mw&&pay<floorManwon(p.weekly_hours_min)-1)add("work","check",`월 급여 ${won(pay)}만원은 최저임금으로 주 ${p.weekly_hours_min}시간을 일할 때의 월급 약 ${won(Math.floor(floorManwon(p.weekly_hours_min)+0.5))}만원보다 낮아 주 ${p.weekly_hours_min}시간 미만일 수 있음. 주 소정근로시간을 확인`);
     else add("work","info",workBase);
