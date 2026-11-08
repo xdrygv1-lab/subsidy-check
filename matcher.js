@@ -25,7 +25,22 @@ const prefixHit=(code,table)=>{if(!code)return null;for(const k of Object.keys(t
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysLeft(end){const a=end.split("-").map(Number),t=todayISO().split("-").map(Number);return Math.round((Date.UTC(a[0],a[1]-1,a[2])-Date.UTC(t[0],t[1]-1,t[2]))/86400000)}
 function monthsSince(ym){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(ym||""));if(!m)return null;const d=new Date();return (d.getFullYear()-+m[1])*12+d.getMonth()+1-+m[2]}
-const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(sectionOf(c))?10:5);
+const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(sectionOf(c))?10:5)&&smallSalesState(c).st!=="over";
+/* 소상공인은 소기업 안이어야 한다(중소기업기본법 시행령 별표 3 매출 기준, 원문은 tax_credits.json 한 곳, rules.js 의 small_company_sales_eok). matcher.py 의 small_sales_state 와 같다.
+   st: over 기준을 10% 넘게 넘음 / near 기준 위아래 10% 안이거나 어림 매출이 기준을 넘음 / ok 기준 아래 / null 업종이나 매출을 몰라 말하지 않음.
+   몇 달치 매출은 12개월로, 올해 개업해 앞 해 매출이 없으면 2026년 1~8월 매출을 연 매출로 어림한다 */
+function smallSalesState(c){
+  const table=RULES.small_company_sales_eok||{},ks=ksicsOf(c);
+  const key=Object.keys(table).sort((a,b)=>b.length-a.length).find(k=>ks.some(x=>x.startsWith(k)));
+  if(key===undefined)return {st:null,base:null,v:null,est:false};
+  const base=table[key];let v=num(c.sales_manwon),est=false;const months=num(c.sales_months);
+  if(v!==null&&months&&months>0&&months<12){v=v/months*12;est=true}
+  if(v===null){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(c.founded||"")),v8=num(c.sales_2026_1to8_manwon);
+    if(m&&+m[1]===2026&&+m[2]>=1&&+m[2]<=8&&v8!==null){v=v8/(9-(+m[2]))*12;est=true}}
+  if(v===null)return {st:null,base,v:null,est:false};
+  const lim=base*10000,st=(v>lim*1.1&&!est)?"over":(v>lim*0.9?"near":"ok");
+  return {st,base,v,est};
+}
 const sameSido=(s,list)=>!list||!list.length||list.includes(s);
 function sigunguState(c,list){if(!list||!list.length)return "match";const where=((c.sigungu||"")+" "+(c.address||"")).trim();if(!where)return "unknown";return list.some(s=>placeHas(where,s))?"match":"other"}
 /* 시군구 이름이 «낱말로» 들어 있는가. 글자만 찾으면 강서구 안의 서구, 달서구 안의 서구, 남동구 안의 동구가 걸린다(2026-09-23 밤). matcher.py 의 place_has 와 같다 */
@@ -208,6 +223,7 @@ function factCheck(ck,c){
     if(ck.near&&Math.abs(v-ck.manwon)<=ck.manwon*ck.near)return {k:"near",v};   /* 기준선 가까이: 신고 매출의 기준이 조금만 달라도 뒤집힌다 */
     return t==="sales_lt"?v<ck.manwon:v<=ck.manwon}
   if(t==="small_biz"){
+    const sst=smallSalesState(c).st;if(sst==="over")return false;   /* 매출이 소기업 기준을 넘으면 직원 수가 적어도 소상공인이 아니다 */
     let n=num(c.insured);if(n===null)return eiOnly(c);
     const n0=n;
     if(ck.exclude_hired_since){const cnt=(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length;n-=ck.exclude_max?Math.min(cnt,ck.exclude_max):cnt}   /* 공고문이 «지원 대상 새 직원은 상시근로자 수에서 뺀다» 고 한 경우. 지원 대상이 되는 수까지만 뺀다 */
@@ -215,7 +231,7 @@ function factCheck(ck,c){
     for(const alt of [num(c.insured_low),num(c.insured_high)]){   /* 직원 수를 달리 세면 나오는 더 작은 값과 더 큰 값(사원 목록과 원천세 인원이 다른 곳 등). 그 값으로는 결과가 달라지면 단정하지 않는다 */
       if(alt!==null&&((alt-(n0-n))<lim)!==(n<lim))return null;
     }
-    return n<lim;
+    return (n<lim&&sst==="near")?null:n<lim;
   }
   if(t==="hired_since"){   /* 그 날짜(부터 until 까지)에 새로 뽑아 지금도 일하는 직원이 있는가. hire_dates_on 이 없으면 입력한 채용일 1건으로 보고, 그것도 없으면 모름 */
     const until=ck.until||"9999-12-31",inRange=x=>ck.date<=String(x)&&String(x)<=until;
@@ -323,6 +339,8 @@ function factEvidence(ck,c){
       const lim=SMALL10.has(sectionOf(c))?10:5;
       if(ck.exclude_hired_since)s+=" (새로 뽑은 "+(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length+"명은 빼고 셈)";
       s+=" / 기준 "+lim+"명 미만";
+      const ss=smallSalesState(c);
+      if(ss.base!==null&&ss.v!==null)s+=" · 매출 "+evNum(ss.v)+"만원"+(ss.est?" 어림":"")+" / 소기업 기준 "+ss.base+"억원 이하";
     }else if(ck.n!==undefined&&ck.n!==null)s+=" / 기준 "+ck.n+"명 "+(t==="insured_gte"?"이상":"미만");
     return s;
   }
