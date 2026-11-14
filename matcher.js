@@ -25,7 +25,28 @@ const prefixHit=(code,table)=>{if(!code)return null;for(const k of Object.keys(t
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysLeft(end){const a=end.split("-").map(Number),t=todayISO().split("-").map(Number);return Math.round((Date.UTC(a[0],a[1]-1,a[2])-Date.UTC(t[0],t[1]-1,t[2]))/86400000)}
 function monthsSince(ym){const m=/^(\d{4})[-./]?(\d{1,2})/.exec(String(ym||""));if(!m)return null;const d=new Date();return (d.getFullYear()-+m[1])*12+d.getMonth()+1-+m[2]}
-const isSmallBiz=c=>num(c.insured,0)<(SMALL10.has(sectionOf(c))?10:5)&&smallSalesState(c).st!=="over";
+/* 소상공인 인원 기준을 법대로 본다(2026-11-14 상권 «이대로 고침», 소상공인기본법 시행령 제3조 제4항: 직전 사업연도 매월 말일 상시근로자 수 합 ÷ 12, 창업이면 창업한 달부터 평균).
+   값은 insured_prev_avg(n, year, span, src, est, by_year). 돌려주는 값 {st:"yes"|"no"|"maybe"|null, why}. matcher.py 의 prev_headcount_state 와 같다.
+   기준보다 1명 넘게 작으면 yes(어림은 법대로 센 값보다 크거나 같다), ±1명 안이면 prev_near, 1명 넘게 크면 3년 유예일 수 있으면 prev_grace, 어림이면 prev_est, 아니면 no */
+function prevHeadcountState(c,lim){
+  const p=c.insured_prev_avg,n=(p&&typeof p==="object")?num(p.n):null;
+  if(n===null)return {st:null,why:null};
+  if(n<lim-1)return {st:"yes",why:null};
+  if(n<lim+1)return {st:"maybe",why:"prev_near"};
+  const y=Math.trunc(num(p.year,0)),by=p.by_year||{};
+  let grace=false;for(let yy=y-3;yy<y;yy++){const v=num(by[String(yy)]);if(v!==null&&v<lim)grace=true}
+  if(n<20&&!p.founded_window&&grace)return {st:"maybe",why:"prev_grace"};
+  if(p.est)return {st:"maybe",why:"prev_est"};
+  return {st:"no",why:null};
+}
+/* 공고 «소상공인 대상» 표시용. true / false / null(확인할 것). matcher.py 의 is_small_biz 와 같다 */
+function isSmallBiz(c){
+  const lim=SMALL10.has(sectionOf(c))?10:5;
+  if(smallSalesState(c).st==="over")return false;
+  const st=prevHeadcountState(c,lim).st;
+  if(st!==null)return st==="yes"?true:(st==="no"?false:null);
+  return num(c.insured,0)<lim;
+}
 /* 소상공인은 소기업 안이어야 한다(중소기업기본법 시행령 별표 3 매출 기준, 원문은 tax_credits.json 한 곳, rules.js 의 small_company_sales_eok). matcher.py 의 small_sales_state 와 같다.
    st: over 기준을 10% 넘게 넘음 / near 기준 위아래 10% 안이거나 어림 매출이 기준을 넘음 / ok 기준 아래 / null 업종이나 매출을 몰라 말하지 않음.
    몇 달치 매출은 12개월로, 올해 개업해 앞 해 매출이 없으면 2026년 1~8월 매출을 연 매출로 어림한다 */
@@ -224,6 +245,12 @@ function factCheck(ck,c){
     return t==="sales_lt"?v<ck.manwon:v<=ck.manwon}
   if(t==="small_biz"){
     const sst=smallSalesState(c).st;if(sst==="over")return false;   /* 매출이 소기업 기준을 넘으면 직원 수가 적어도 소상공인이 아니다 */
+    if(!ck.exclude_hired_since){   /* 법 기준(직전 해 월평균)이 있으면 그것으로. 새 직원을 빼고 세는 공고는 신청일 인원이라 지금 인원 그대로 */
+      const ps=prevHeadcountState(c,SMALL10.has(sectionOf(c))?10:5);
+      if(ps.st==="yes")return sst==="near"?null:true;
+      if(ps.st==="no")return false;
+      if(ps.st==="maybe")return {k:ps.why,v:null};
+    }
     let n=num(c.insured);if(n===null)return eiOnly(c);
     const n0=n;
     if(ck.exclude_hired_since){const cnt=(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length;n-=ck.exclude_max?Math.min(cnt,ck.exclude_max):cnt}   /* 공고문이 «지원 대상 새 직원은 상시근로자 수에서 뺀다» 고 한 경우. 지원 대상이 되는 수까지만 뺀다 */
@@ -336,7 +363,8 @@ function factEvidence(ck,c){
     const ei=eiNum(c);
     if(ei!==null){const m=/^(\d{4})-(\d{1,2})/.exec(String((c.insured_ei||{}).ym||""));s+=", 고용보험 가입자 "+Math.trunc(ei)+"명"+(m?"("+m[1]+"년 "+(+m[2])+"월)":"")}
     if(t==="small_biz"){
-      const lim=SMALL10.has(sectionOf(c))?10:5;
+      const lim=SMALL10.has(sectionOf(c))?10:5,p=c.insured_prev_avg;
+      if(!ck.exclude_hired_since&&p&&typeof p==="object"&&num(p.n)!==null)s+=" · "+(p.span||"작년")+" 월평균 "+String(num(p.n))+"명("+(p.src||"어림")+")";   /* 법 기준 값: 무엇으로 셌는지 같이 적는다 */
       if(ck.exclude_hired_since)s+=" (새로 뽑은 "+(c.hire_dates_on||[]).filter(d=>String(d)>=ck.exclude_hired_since).length+"명은 빼고 셈)";
       s+=" / 기준 "+lim+"명 미만";
       const ss=smallSalesState(c);
@@ -465,6 +493,7 @@ function matchNotices(c,notices,needsDef,limit){
     const flags=[];
     if(title.includes("소상공인")||tags.includes("소상공인")){
       if(small){score+=1;flags.push("소상공인 대상")}
+      else if(small===null){if(title.includes("소상공인"))flags.push("소상공인 대상일 수 있음")}   /* 직전 해 월평균으로 단정할 수 없음: 점수는 그대로, 확인 표시만 */
       else if(title.includes("소상공인")){score-=3;flags.push("소상공인 전용일 수 있음")}
     }
     /* 업종을 이름에 밝힌 공고: 회사 업종을 아는데 그 업종이 아니면 감점, 그 업종이면 가점 */
