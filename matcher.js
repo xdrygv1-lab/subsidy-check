@@ -549,7 +549,7 @@ function matchNotices(c,notices,needsDef,limit){
       if(passed.length&&!failed.length)reasons.push(`요건 맞음: ${passed.length}가지`);
       if(failed.length)flags.push("요건에 안 맞아 대상이 아닐 수 있음");
       /* evidence = 요건 한 줄마다 «우리 회사 값» 을 붙인 목록. 사람이 근거를 바로 짚기 위한 것이라 점수에는 넣지 않는다 */
-      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,passed,failed,unknown,todo,sub,evidence,
+      factOut={name:fact.name,benefit:fact.benefit||null,how:fact.how||null,notes:fact.notes||[],verified:fact.verified||null,basic_complete:fact.basic_complete||null,confirm:fact.confirm||[],passed,failed,unknown,todo,sub,evidence,
         /* 받는 쪽이 목록 길이로 짐작하지 않게 판정기가 직접 매긴다. info = 맞춰 본 요건이 없어 지원 내용만 보여 주는 공고 */
         status:(!(passed.length||failed.length||unknown.length||todo.length))?"info":failed.length?"no":unknown.length?"check":todo.length?"todo":"yes"};
     }
