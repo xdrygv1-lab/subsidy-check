@@ -286,6 +286,7 @@ function factCheck(ck,c){
     if(by!==null){const age=new Date().getFullYear()-by;return age<=ck.n?true:(age===ck.n+1?null:false)}
     if(c.ceo_age_band==="le34")return ck.n>=34?true:null;
     if(c.ceo_age_band==="35to39")return ck.n>=39?true:(ck.n<35?false:null);
+    if(c.ceo_age_band==="40plus")return ck.n<40?false:null;
     if((c.traits||[]).some(x=>String(x).includes("39세 이하")))return ck.n>=39?true:null;
     return null;
   }
@@ -397,6 +398,7 @@ function factEvidence(ck,c){
     if(by!==null)return "우리 대표 "+Math.trunc(by)+"년생 (연 나이 "+(+todayISO().slice(0,4)-Math.trunc(by))+"세)"+tail;
     if(c.ceo_age_band==="le34")return "우리 대표 34세 이하 표시"+tail;
     if(c.ceo_age_band==="35to39")return "우리 대표 35~39세 표시"+tail;
+    if(c.ceo_age_band==="40plus")return "우리 대표 40세 이상 표시"+tail;
     return "우리 대표 나이: 모름"+tail;
   }
   if(t==="section_in"){const sec=sectionOf(c);return (sec?"우리 업종 대분류 "+sec:"우리 업종: 모름")+" / 기준 "+(ck.sections||[]).join(", ")}
